@@ -1,24 +1,38 @@
 # build output
 dist/
-# generated types
-.astro/
+.output/
 
 # dependencies
 node_modules/
 
+# generated types & caches
+.astro/
+.vercel/
+.netlify/
+.wrangler/
+
 # logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-
 # environment variables
 .env
 .env.production
+.env*.local
 
-# macOS-specific files
+# editor / OS junk
 .DS_Store
-
-# jetbrains setting folder
+.vscode/*
+!.vscode/extensions.json
 .idea/
+*.swp
+
+# custom
+VOICE.md
+.vscode/
+.claude/
+LAYOUT.md
+templates/

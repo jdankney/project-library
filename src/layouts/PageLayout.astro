@@ -1,0 +1,78 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+	title: string;
+	description: string;
+	/** Optional mono kicker above the title, e.g. "About". */
+	eyebrow?: string;
+}
+
+const { title, description, eyebrow } = Astro.props;
+---
+
+<html lang="en">
+	<head>
+		<BaseHead title={`${title} · The JDAnkney Vault`} description={description} />
+		<style>
+			/* standalone pages get the warm paper identity, in contrast to the
+			   navy project pages */
+			body {
+				background: rgb(var(--paper));
+			}
+			main {
+				width: 720px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 3.5em 1em 4em;
+			}
+			.title {
+				margin-bottom: 2.5rem;
+			}
+			.title h1 {
+				margin: 0;
+				font-size: 2.6rem;
+				line-height: 1.15;
+				color: rgb(var(--bg));
+			}
+			.prose {
+				color: rgb(var(--ink-muted));
+				font-size: 1.05rem;
+				line-height: 1.7;
+			}
+			.prose :global(a) {
+				color: rgb(var(--bg));
+				text-decoration-color: var(--copper);
+				text-underline-offset: 3px;
+			}
+			.prose :global(a:hover) {
+				text-decoration-color: rgb(var(--bg));
+			}
+			.prose :global(strong) {
+				color: rgb(var(--bg));
+			}
+
+			@media (max-width: 720px) {
+				.title h1 {
+					font-size: 2rem;
+				}
+			}
+		</style>
+	</head>
+
+	<body>
+		<Header />
+		<main>
+			<div class="title">
+				{eyebrow && <p class="eyebrow eyebrow--paper">{eyebrow}</p>}
+				<h1>{title}</h1>
+			</div>
+			<div class="prose">
+				<slot />
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

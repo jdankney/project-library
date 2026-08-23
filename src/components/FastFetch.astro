@@ -1,0 +1,149 @@
+---
+const asciiArt = `
+                   -\`
+                  .o+\`
+                 \`ooo/
+                \`+oooo:
+               \`+oooooo:
+               -+oooooo+:
+             \`/:-:++oooo+:
+            \`/++++/+++++++:
+           \`/++++++++++++++:
+          \`/+++ooooooooooooo/\`
+         ./ooosssso++osssssso+\`
+        .oossssso-\`\`\`\`/ossssss+\`
+       -osssssso.      :ssssssso.
+      :osssssss/        osssso+++.
+     /ossssssss/        +ssssooo/-
+   \`/ossssso+/:-        -:/+osssso+-
+  \`+sso+:-\`                 \`.-/+oso:
+ \`++:.                           \`-/+/
+ .\`                                 \`/
+`;
+
+
+
+
+// Each line: [key, value]. Keys stay "real fetch" flavored; values bring the chaos.
+const info: [string, string][] = [
+	['OS', 'Arch Linux x86_64 (btw)'],
+	['Host', 'Computer Engineering Student'],
+	['Kernel', 'Palomar College, transferring to UCSD'],
+	['Uptime', 'coding since ~2021 (the laser turret era)'],
+	['Packages', '2 meshtastic nodes, 1 self-hosted everything'],
+	['Shell', 'zsh + too many aliases'],
+	['DE', 'a soldering iron and 10 spare MOSFETs'],
+	['Terminal', 'wherever the segfault is'],
+	['CPU', 'runs on caffeine @ 3.2GHz'],
+	['GPU', 'GTX 1080ti since 2019 (Still going strong!)'],
+	['Memory', 'leaking, probably'],
+	['Disk', '2TB, ~6% is offline Wikipedia'],
+	['Locale', 'San Diego, CA'],
+];
+---
+
+<section class="fetch" aria-label="About, in fastfetch form">
+	<p class="fetch-cmd"><span class="fetch-prompt">$</span> fastfetch</p>
+	<div class="fetch-body">
+		<pre class="fetch-art">{asciiArt}</pre>
+		<div class="fetch-info">
+			<p class="fetch-title">
+				<span class="fetch-user">jdankney</span>@<span class="fetch-host">archangel</span>
+			</p>
+			<p class="fetch-rule">-----------------------</p>
+			{info.map(([key, value]) => (
+				<p class="fetch-line">
+					<span class="fetch-key">{key}</span>: {value}
+				</p>
+			))}
+			<p class="fetch-colors" aria-hidden="true">
+				<span style="background:#e0524b"></span><span style="background:#e0a71b"></span
+				><span style="background:#2e9e4f"></span><span style="background:#3b8eea"></span
+				><span style="background:#a15ccb"></span><span style="background:#4bb6c4"></span>
+			</p>
+		</div>
+	</div>
+</section>
+
+<style>
+	/* reads as terminal output embedded in the page: squared corners and a
+	   copper hairline, matching the site's de-carded design language */
+	.fetch {
+		font-family: var(--font-mono);
+		font-size: 0.78rem;
+		line-height: 1.4;
+		background: rgb(var(--bg-deep));
+		border: 1px solid var(--copper-rule);
+		border-left: 3px solid var(--copper);
+		padding: 1rem 1.25rem 1.15rem;
+		margin: 1.75rem 0 0;
+		overflow-x: auto;
+	}
+	.fetch-cmd {
+		margin: 0 0 0.85rem;
+		color: rgb(var(--text-muted));
+	}
+	.fetch-prompt {
+		color: var(--copper-light);
+	}
+	.fetch-body {
+		display: flex;
+		gap: 1.75rem;
+		align-items: center;
+		flex-wrap: wrap;
+	}
+	.fetch-art {
+		margin: 0;
+		color: var(--accent-light);
+		white-space: pre;
+		font-size: 0.62rem;
+		line-height: 1.15;
+		flex-shrink: 0;
+	}
+	.fetch-info {
+		margin: 0;
+		min-width: 0;
+	}
+	.fetch-info p {
+		margin: 0;
+	}
+	.fetch-title {
+		margin-bottom: 0.1rem;
+	}
+	.fetch-user,
+	.fetch-host,
+	.fetch-key {
+		color: var(--copper-light);
+		font-weight: 700;
+	}
+	.fetch-rule {
+		color: var(--copper-rule);
+		margin-bottom: 0.3rem;
+	}
+	.fetch-line {
+		color: rgb(var(--text-muted));
+	}
+	.fetch-colors {
+		display: flex;
+		gap: 4px;
+		margin-top: 0.7rem;
+	}
+	.fetch-colors span {
+		width: 15px;
+		height: 15px;
+		display: inline-block;
+	}
+
+	@media (max-width: 640px) {
+		.fetch {
+			font-size: 0.72rem;
+			padding: 0.85rem 1rem 1rem;
+		}
+		.fetch-body {
+			gap: 0.9rem;
+		}
+		.fetch-art {
+			font-size: 0.5rem;
+		}
+	}
+</style>

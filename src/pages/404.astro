@@ -1,0 +1,91 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_TITLE } from '../consts';
+
+// A few on-brand "error" lines; one is picked at random each build.
+const quips = [
+	'This page browned out like my V0.2 buck converter under load.',
+	'404: this route isn\'t on the mesh. No node picked it up.',
+	'Couldn\'t find that one. Might\'ve been a cold solder joint.',
+	'This link returned all 0xFF. Nothing on the bus.',
+	'Page not found — probably still stuck in the Altoids tin with no GPS lock.',
+];
+const quip = quips[Math.floor(Math.random() * quips.length)];
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`404 — ${SITE_TITLE}`} description="Page not found." />
+		<style>
+			main {
+				width: 720px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 4rem 1em;
+				text-align: center;
+			}
+			.code {
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 6rem;
+				font-weight: 700;
+				line-height: 1;
+				color: rgb(var(--accent));
+				margin: 0;
+				letter-spacing: 0.05em;
+			}
+			.quip {
+				font-size: 1.25rem;
+				color: rgb(var(--gray-dark));
+				margin: 1.25rem 0 2rem;
+			}
+			.terminal {
+				text-align: left;
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 0.85rem;
+				background: rgba(var(--gray), 12%);
+				border: 1px solid rgba(var(--gray), 25%);
+				border-radius: 10px;
+				padding: 1rem 1.25rem;
+				margin: 0 auto 2.5rem;
+				max-width: 460px;
+				color: rgb(var(--gray-dark));
+				line-height: 1.6;
+			}
+			.terminal .prompt { color: rgb(var(--accent)); }
+			.terminal .err { color: #e0524b; }
+			.home-link {
+				display: inline-block;
+				padding: 0.6rem 1.4rem;
+				border: 1px solid rgb(var(--accent));
+				border-radius: 8px;
+				text-decoration: none;
+				color: rgb(var(--accent));
+				font-weight: 600;
+				transition: background 0.15s ease, color 0.15s ease;
+			}
+			.home-link:hover {
+				background: rgb(var(--accent));
+				color: white;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<p class="code">404</p>
+			<p class="quip">{quip}</p>
+
+			<div class="terminal">
+				<span class="prompt">j4mes@archangel</span>:~$ locate that-page<br />
+				<span class="err">locate: no matches found</span><br />
+				<span class="prompt">j4mes@archangel</span>:~$ cd /home<br />
+			</div>
+
+			<a class="home-link" href="/">&larr; Back to safety</a>
+		</main>
+		<Footer />
+	</body>
+</html>

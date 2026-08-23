@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+import ProjectLog from '../../components/ProjectLog.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+
+const projects = (await getCollection('projects')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`Projects · ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<style>
+			main {
+				width: 860px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 3em 1em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<ProjectLog posts={projects} label="All projects" />
+		</main>
+		<Footer />
+	</body>
+</html>

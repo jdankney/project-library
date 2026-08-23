@@ -1,0 +1,195 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+	posts: CollectionEntry<'projects'>[];
+	label?: string;
+}
+
+const { posts, label = 'Projects' } = Astro.props;
+
+const statusLabel: Record<string, string> = {
+	complete: 'Complete',
+	'in-progress': 'In progress',
+	shelved: 'Shelved',
+};
+---
+
+<div class="log-head">
+	<p class="eyebrow">{label}</p>
+	{posts.length > 0 && (
+		<span class="log-count">{String(posts.length).padStart(3, '0')} logged</span>
+	)}
+</div>
+{
+	posts.length === 0 ? (
+		<p class="empty">No projects published yet — check back soon.</p>
+	) : (
+		<ol class="log">
+			{posts.map((post, i) => (
+				<li class={`log-entry status-${post.data.status ?? 'unset'}`}>
+					<a href={`/projects/${post.id}/`}>
+						<div class="log-meta">
+							<span class="log-num">{String(i + 1).padStart(3, '0')}</span>
+							<span class="log-date">
+								<FormattedDate date={post.data.pubDate} />
+							</span>
+							<span class="log-status">
+								<span class="status-dot" />
+								{statusLabel[post.data.status ?? ''] ?? 'Unlabeled'}
+							</span>
+						</div>
+						<div class="log-body">
+							<p class="log-title">{post.data.title}</p>
+							<p class="log-desc">{post.data.description}</p>
+							{post.data.tags && post.data.tags.length > 0 && (
+								<div class="log-tags">
+									{post.data.tags.map((tag) => (
+										<span class="log-tag">{tag}</span>
+									))}
+								</div>
+							)}
+						</div>
+					</a>
+				</li>
+			))}
+		</ol>
+	)
+}
+
+<style>
+	.log-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 0.85rem;
+	}
+	.log-head .eyebrow {
+		margin-bottom: 0;
+	}
+	.log-count {
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		letter-spacing: 0.08em;
+		color: rgb(var(--text-muted));
+	}
+
+	.log {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		border-top: 2px solid var(--copper);
+	}
+	.log-entry {
+		border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+		border-left: 4px solid var(--status-color, rgba(255, 255, 255, 0.15));
+		transition: background-color 0.15s ease;
+	}
+	.log-entry.status-complete {
+		--status-color: var(--accent);
+	}
+	.log-entry.status-in-progress {
+		--status-color: var(--copper);
+	}
+	.log-entry.status-shelved {
+		--status-color: rgb(var(--text-muted));
+	}
+	.log-entry:hover {
+		background: rgba(199, 120, 66, 0.06);
+	}
+	.log-entry a {
+		text-decoration: none;
+		color: inherit;
+		display: flex;
+		gap: 1.75rem;
+		padding: 1.25rem 1.25rem 1.25rem 1rem;
+		/* nudges out of the list on hover, like pulling a card from a drawer */
+		transition: padding-left 0.15s ease;
+	}
+	.log-entry:hover a {
+		padding-left: 1.5rem;
+	}
+	.log-meta {
+		flex: 0 0 130px;
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		font-family: var(--font-mono);
+	}
+	.log-num {
+		font-size: 0.75rem;
+		letter-spacing: 0.1em;
+		color: var(--copper-light);
+	}
+	.log-date {
+		font-size: 0.78rem;
+		color: rgb(var(--text-muted));
+	}
+	.log-status {
+		font-size: 0.72rem;
+		color: rgb(var(--text-muted));
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+	.status-dot {
+		display: inline-block;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background: var(--status-color, rgba(255, 255, 255, 0.3));
+		flex-shrink: 0;
+	}
+	.log-body {
+		flex: 1;
+		min-width: 0;
+	}
+	.log-title {
+		font-size: 1.15rem;
+		font-weight: 700;
+		line-height: 1.3;
+		margin: 0 0 0.35rem;
+		color: rgb(var(--text));
+		transition: color 0.15s ease;
+	}
+	.log-entry:hover .log-title {
+		color: var(--accent-light);
+	}
+	.log-desc {
+		font-size: 0.95rem;
+		color: rgb(var(--text-muted));
+		margin: 0;
+	}
+	.log-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin-top: 0.6rem;
+	}
+	.log-tag {
+		font-family: var(--font-mono);
+		font-size: 0.72rem;
+		padding: 0.1rem 0.5rem;
+		background: rgba(255, 255, 255, 0.08);
+		color: var(--copper-light);
+	}
+	.empty {
+		color: rgb(var(--text-muted));
+		font-style: italic;
+	}
+
+	@media (max-width: 640px) {
+		.log-entry a {
+			flex-direction: column;
+			gap: 0.6rem;
+		}
+		.log-meta {
+			flex-direction: row;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0.75rem;
+		}
+	}
+</style>

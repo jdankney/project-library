@@ -1,13 +1,12 @@
 // @ts-check
 
-import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig, fontProviders } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://example.com',
-	integrations: [mdx(), sitemap()],
+	site: 'https://project-library.jdankney.workers.dev',
+	integrations: [sitemap()],
 	fonts: [
 		{
 			provider: fontProviders.local(),
@@ -25,6 +24,22 @@ export default defineConfig({
 					{
 						src: ['./src/assets/fonts/atkinson-bold.woff'],
 						weight: 700,
+						style: 'normal',
+						display: 'swap',
+					},
+				],
+			},
+		},
+		{
+			provider: fontProviders.local(),
+			name: 'MinecraftPE',
+			cssVariable: '--font-minecraft',
+			fallbacks: ['monospace'],
+			options: {
+				variants: [
+					{
+						src: ['./src/assets/fonts/MINECRAFT-PE.woff'],
+						weight: 400,
 						style: 'normal',
 						display: 'swap',
 					},

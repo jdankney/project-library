@@ -17,8 +17,9 @@ const isActive = href === pathname || href === '/' + (subpath?.[0] || '');
 		display: inline-block;
 		text-decoration: none;
 	}
+	/* the active state's colour + copper underline bar live in Header.astro;
+	   the underline that used to be here was always overridden by it */
 	a.active {
 		font-weight: bolder;
-		text-decoration: underline;
 	}
 </style>

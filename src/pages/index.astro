@@ -1,48 +1,177 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import Footer from '../components/Footer.astro';
+import ProjectLog from '../components/ProjectLog.astro';
+import FastFetch from '../components/FastFetch.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import { getCollection } from 'astro:content';
+
+// Pull every project, newest first.
+const projects = (await getCollection('projects')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+// Surface whatever is actually on the bench right now, rather than hardcoding it.
+const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<style>
+			main {
+				width: 860px;
+				max-width: calc(100% - 2em);
+				margin: 0 auto;
+				padding: 1em;
+			}
+
+			/* ---- full-bleed sections escape main's constrained width ---- */
+			.bleed {
+				width: 100vw;
+				margin-left: calc(50% - 50vw);
+				margin-right: calc(50% - 50vw);
+			}
+
+			/* ---- Hero: navy, asymmetric, offset wordmark ---- */
+			.hero {
+				padding-bottom: 1px; /* clip the dot-grid to the section box */
+			}
+			.hero-inner {
+				max-width: 740px;
+				margin: 0 auto 0 8%;
+				padding: 4.5rem 1.5rem 4rem;
+			}
+			/* the pixel font's glyphs overflow upward past their line box, so the
+			   eyebrow above needs extra clearance to avoid being overlapped */
+			.hero-inner .eyebrow {
+				margin-bottom: 1.6rem;
+			}
+			.wordmark {
+				font-family: var(--font-minecraft);
+				font-size: clamp(2.25rem, 7vw, 4.25rem);
+				line-height: 1.05;
+				letter-spacing: 0.02em;
+				margin: 0 0 1.25rem;
+				color: rgb(var(--text));
+			}
+
+			/* copper trace running off a pad — the brand mark, borrowed from
+			   the boards these projects are built on */
+			.trace {
+				display: flex;
+				align-items: center;
+				margin: 0 0 1.5rem;
+			}
+			.trace::before {
+				content: '';
+				width: 10px;
+				height: 10px;
+				background: var(--copper);
+				flex-shrink: 0;
+			}
+			.trace::after {
+				content: '';
+				height: 2px;
+				background: var(--copper);
+				width: 300px;
+				max-width: 55%;
+			}
+
+			.tagline {
+				font-size: 1.15rem;
+				font-weight: 600;
+				color: rgb(var(--text-muted));
+				margin: 0 0 1.75rem;
+				max-width: 32em;
+			}
+			/* on the bench right now — real state, not decoration */
+			.bench {
+				font-family: var(--font-mono);
+				font-size: 0.85rem;
+				color: rgb(var(--text-muted));
+				margin: 0.9rem 0 0;
+			}
+			.bench .marker {
+				color: var(--copper-light);
+			}
+			.bench a {
+				color: var(--accent-light);
+				text-decoration: none;
+				border-bottom: 1px solid var(--copper-rule);
+			}
+			.bench a:hover {
+				border-bottom-color: var(--accent-light);
+			}
+
+			/* ---- Bio strip: paper, warm, personal ---- */
+			.bio-strip {
+				background: rgb(var(--paper));
+				border-top: 3px solid var(--copper);
+			}
+			.bio-inner {
+				max-width: 640px;
+				margin: 0 0 0 8%;
+				padding: 3.5rem 1.5rem;
+			}
+			.bio-text {
+				font-size: 1.1rem;
+				line-height: 1.65;
+				color: rgb(var(--ink-muted));
+				margin: 0;
+			}
+			.bio-text strong {
+				color: rgb(var(--bg));
+			}
+
+			@media (max-width: 720px) {
+				.hero-inner,
+				.bio-inner {
+					margin-left: 0;
+					padding-left: 1.25rem;
+					padding-right: 1.25rem;
+				}
+			}
+		</style>
 	</head>
 	<body>
 		<Header />
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<section class="hero bleed dot-grid">
+				<div class="hero-inner">
+					<p class="eyebrow">Welcome to</p>
+					<h1 class="wordmark">THE JDANKNEY VAULT</h1>
+					<div class="trace"></div>
+					<p class="tagline">
+						The hardware and software I've built, broken down and explained.
+					</p>
+					<FastFetch />
+					{
+						onTheBench && (
+							<p class="bench">
+								<span class="marker">▸</span> on the bench:{' '}
+								<a href={`/projects/${onTheBench.id}/`}>{onTheBench.data.title}</a>
+							</p>
+						)
+					}
+				</div>
+			</section>
+
+			<section class="bio-strip bleed">
+				<div class="bio-inner">
+					<p class="eyebrow eyebrow--paper">Who's behind this</p>
+					<p class="bio-text">
+						I'm <strong>JDAnkney</strong>, a Computer Engineering student at Palomar College
+						planning to transfer to UC San Diego. This is my project notebook: parts lists,
+						wiring, firmware, and an honest record of the many things that caught fire along
+						the way.
+					</p>
+				</div>
+			</section>
+
+			<ProjectLog posts={projects} />
 		</main>
 		<Footer />
 	</body>
