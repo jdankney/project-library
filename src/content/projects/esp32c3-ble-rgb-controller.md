@@ -64,6 +64,9 @@ software clone of the original board, I wanted real BLE control and the practice
 ## Result
 I have restored my full RGB control-over-Bluetooth from my phone functionality, on hardware I built and software I wrote.
 
+![led_controller](../../assets/media/esp32c3_rgb_controller/led_controller.jpg)  
+This is what the controller looks like fully exposed. I'm planning on giving it an enclosure but for now I'm prioritizing other projects :)
+
 ## Potential Future Upgrades
 - I could implement a mobile app (or use one that already exists) to better control the RGB values rather than having to type the value out. Adding a slider or visual aid at the minimum would make the whole UI a lot cleaner.
 - If I were to ever get a digital LED strip I could restart the project but with much more control.

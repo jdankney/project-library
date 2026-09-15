@@ -4,6 +4,8 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ProjectLog from '../components/ProjectLog.astro';
 import FastFetch from '../components/FastFetch.astro';
+import { Image } from 'astro:assets';
+import portrait from '../assets/me.jpg';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import { getCollection } from 'astro:content';
 
@@ -40,7 +42,7 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				padding-bottom: 1px; /* clip the dot-grid to the section box */
 			}
 			.hero-inner {
-				max-width: 740px;
+				max-width: 1060px;
 				margin: 0 auto 0 8%;
 				padding: 4.5rem 1.5rem 4rem;
 			}
@@ -87,6 +89,47 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				margin: 0 0 1.75rem;
 				max-width: 32em;
 			}
+			/* ---- Hero showcase: terminal readout + portrait, side by side.
+			   flex-wrap means the portrait drops below on its own once there
+			   isn't room for both, rather than squeezing the fetch panel. ---- */
+			.hero-showcase {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: flex-start;
+				gap: 2rem;
+				margin-top: 1.75rem;
+			}
+			.portrait {
+				flex: 0 0 250px;
+				margin: 0;
+			}
+			.portrait-media {
+				position: relative;
+			}
+			/* offset copper frame peeking out behind the photo — layered rather
+			   than a plain border, so it reads as something placed by hand */
+			.portrait-media::before {
+				content: '';
+				position: absolute;
+				inset: 14px -14px -14px 14px;
+				border: 2px solid var(--copper-rule);
+			}
+			.portrait-media :global(img) {
+				position: relative;
+				display: block;
+				width: 100%;
+				aspect-ratio: 4 / 5;
+				object-fit: cover;
+				object-position: 62% 38%;
+				border: 2px solid var(--copper);
+			}
+			.portrait figcaption {
+				margin-top: 0.75rem;
+				font-family: var(--font-mono);
+				font-size: 0.72rem;
+				color: var(--copper-light);
+			}
+
 			/* on the bench right now — real state, not decoration */
 			.bench {
 				font-family: var(--font-mono);
@@ -145,9 +188,17 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 					<h1 class="wordmark">THE JDANKNEY VAULT</h1>
 					<div class="trace"></div>
 					<p class="tagline">
-						The hardware and software I've built, broken down and explained.
+						The hardware and software I've built, broken down bit by bit.
 					</p>
-					<FastFetch />
+					<div class="hero-showcase">
+						<FastFetch />
+						<figure class="portrait">
+							<div class="portrait-media">
+								<Image src={portrait} alt="James Ankney" width={640} loading="eager" />
+							</div>
+							<figcaption>./jdankney.jpg</figcaption>
+						</figure>
+					</div>
 					{
 						onTheBench && (
 							<p class="bench">
@@ -163,7 +214,7 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				<div class="bio-inner">
 					<p class="eyebrow eyebrow--paper">Who's behind this</p>
 					<p class="bio-text">
-						I'm <strong>JDAnkney</strong>, a Computer Engineering student at Palomar College
+						I'm <strong>James Ankney/JDAnkney</strong>, a Computer Engineering student at Palomar College
 						planning to transfer to UC San Diego. This is my project notebook: parts lists,
 						wiring, firmware, and an honest record of the many things that caught fire along
 						the way.

@@ -87,6 +87,9 @@ Once Radicale was actually up, iOS connected on the first try. So did KOrganizer
 ## Result
 It works across everything: iOS, KOrganizer on Arch and Debian, and Thunderbird on Windows all sync to the same Radicale collection over CalDAV. I exported my calendar out of Yahoo as an `.ics`, imported it through Thunderbird into the new calendar, and cut Yahoo loose for good.
  
+![radicale_ui](../../assets/media/selfhosted_calendar/radicale_ui.jpg)
+(Sorry for the excessive drawing, I have my Uni classes forwarded into my calendar and I can't expose the backend.)
+
 My whole schedule now lives as plain `.ics` files on a server I own, synced securely across every device over my tailnet, with valid HTTPS and nothing exposed to the internet, for zero dollars and about a tiny fraction of the server it runs on. It just works, and it's mine.
  
 ## Potential Future Upgrades

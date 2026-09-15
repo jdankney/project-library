@@ -25,14 +25,14 @@ pnpm-debug.log*
 
 # editor / OS junk
 .DS_Store
-.vscode/*
-!.vscode/extensions.json
 .idea/
 *.swp
+.vscode/*
+!.vscode/extensions.json
 
-# custom
-VOICE.md
-.vscode/
+# personal working files, not part of the site
 .claude/
-LAYOUT.md
 templates/
+tmp/
+LAYOUT.md
+VOICE.md

@@ -2,7 +2,7 @@
 title: 'Backing up ALL of (English) Wikipedia'
 description: 'Creating an offline backup of the biggest open source library I know of.'
 pubDate: 'Jun 14 2026'
-status: 'in-progress'
+status: 'complete'
 tags: ['Linux', 'Kiwix', 'Wikipedia', 'Homelabbing']
 difficulty: 1
 cost: '$0'
@@ -90,8 +90,14 @@ Also worth remembering: whatever user kiwix-serve runs as needs read access to t
 One more: wait for the torrent to **fully** finish before restarting the service. kiwix-serve won't serve a partial `.zim`, so restarting mid-download just gets you nothing until the `.aria2` control file disappears.
  
 ## Result
-It works exactly like the real thing. I hit `http://<server-ip>:8080` from any device on my network and get the full Kiwix landing page with the Wikipedia tile. Click in, and it's all there: every article, every image, full search, completely offline. It runs automatically on boot and uses about 5-6% of the 2TB. For zero dollars I now own a personal, offline copy of essentially all human general knowledge, which is a slightly absurd thing to be able to say.
- 
+It works exactly like the real thing. I hit `http://<server-ip>:8080` from any device on my network and get the full Kiwix landing page with the Wikipedia tile. Click in, and it's all there: every article, every image, full search, completely offline. It runs automatically on boot and uses about 5-6% of the 2TB. For zero dollars I now own a personal, offline copy of essentially all human general knowledge, which is a slightly absurd thing to be able to say.  
+![selfhosted_wikipedia](../../assets/media/selfhosted_wikipedia/selfhosted_wikipedia.jpg)
+
+```bash
+j4mes@debianserver:~$ du -sh .../j4mes/kiwix/wikipedia_en_all_maxi_2026-02.zim
+116G    .../j4mes/kiwix/wikipedia_en_all_maxi_2026-02.zim
+```
+
 ## Potential Future Upgrades
 - **More ZIM libraries.** Since the glob serves everything in the folder, I want to add the rebuild-civilization-relevant stuff Kiwix packages: medical references, Wikivoyage, iFixit, Project Gutenberg. Same server, one library.
 - **A real offline backup of the backup.** Right now it lives on one drive in the server, and a server is exactly the thing that fails in the emergency this is meant to survive. The move is a copy of the ZIM on external media I can physically disconnect and stash.

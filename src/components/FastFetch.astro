@@ -28,16 +28,14 @@ const asciiArt = `
 const info: [string, string][] = [
 	['OS', 'Arch Linux x86_64 (btw)'],
 	['Host', 'Computer Engineering Student'],
-	['Kernel', 'Palomar College, transferring to UCSD'],
-	['Uptime', 'coding since ~2021 (the laser turret era)'],
-	['Packages', '2 meshtastic nodes, 1 self-hosted everything'],
-	['Shell', 'zsh + too many aliases'],
-	['DE', 'a soldering iron and 10 spare MOSFETs'],
-	['Terminal', 'wherever the segfault is'],
-	['CPU', 'runs on caffeine @ 3.2GHz'],
-	['GPU', 'GTX 1080ti since 2019 (Still going strong!)'],
-	['Memory', 'leaking, probably'],
-	['Disk', '2TB, ~6% is offline Wikipedia'],
+	['Kernel', 'Panic'],
+	['Uptime', '19 years - No Scheduled Maintenance'],
+	['Packages', 'Dreams, regrets, and one working project'],
+	['CPU', 'Overclocked, Undervolted'],
+	['GPU', 'GTX 1080ti Since 2019 (Still going strong!)'],
+	['Memory', 'Leaking, probably'],
+	['Disk', '5 TiB, project graveyard'],
+	['Network', 'Self-Hosted end to end'],
 	['Locale', 'San Diego, CA'],
 ];
 ---
@@ -48,7 +46,7 @@ const info: [string, string][] = [
 		<pre class="fetch-art">{asciiArt}</pre>
 		<div class="fetch-info">
 			<p class="fetch-title">
-				<span class="fetch-user">jdankney</span>@<span class="fetch-host">archangel</span>
+				<span class="fetch-user">jdankney</span>@<span class="fetch-host">vault</span>
 			</p>
 			<p class="fetch-rule">-----------------------</p>
 			{info.map(([key, value]) => (
@@ -56,6 +54,7 @@ const info: [string, string][] = [
 					<span class="fetch-key">{key}</span>: {value}
 				</p>
 			))}
+			<br>
 			<p class="fetch-colors" aria-hidden="true">
 				<span style="background:#e0524b"></span><span style="background:#e0a71b"></span
 				><span style="background:#2e9e4f"></span><span style="background:#3b8eea"></span
@@ -76,7 +75,7 @@ const info: [string, string][] = [
 		border: 1px solid var(--copper-rule);
 		border-left: 3px solid var(--copper);
 		padding: 1rem 1.25rem 1.15rem;
-		margin: 1.75rem 0 0;
+		margin: 0;
 		overflow-x: auto;
 	}
 	.fetch-cmd {

@@ -4,23 +4,24 @@ Hardware and software projects by [jdankney](https://github.com/jdankney) — a
 Computer Engineering student at Palomar College transferring to UC San Diego.
 Build notes, parts lists, and the things that went wrong along the way.
 
-Live at **[project-library.jdankney.workers.dev](https://project-library.jdankney.workers.dev)**,
+Live at **[jdankney.dev](https://jdankney.dev)**,
 built with [Astro](https://astro.build) and deployed to Cloudflare from this repo.
 
 ## Project structure
 
 ```text
-├── public/                 static assets served as-is (favicons)
+├── public/                  static assets served as-is (favicons)
 ├── src/
 │   ├── assets/
 │   │   ├── fonts/           Atkinson (body) + MINECRAFT-PE (display)
-│   │   └── media/           images used inside project write-ups
-│   ├── components/          Header, Footer, ProjectLog, BaseHead, icons
+│   │   ├── media/           images used inside project write-ups
+│   │   └── me.jpg           homepage portrait
+│   ├── components/          Header, Footer, ProjectLog, FastFetch, BaseHead, icons
 │   ├── content/projects/    the project write-ups themselves (Markdown)
 │   ├── layouts/
 │   │   ├── PageLayout.astro   standalone pages (About)
 │   │   └── ProjectPost.astro  individual project write-ups
-│   ├── pages/               routes — /, /about, /projects, /rss.xml
+│   ├── pages/               routes — /, /about, /projects, /rss.xml, /404
 │   ├── styles/global.css    design tokens + shared utilities
 │   └── content.config.ts    frontmatter schema for the projects collection
 ├── astro.config.mjs
@@ -43,7 +44,7 @@ Drop a new Markdown file in `src/content/projects/`. Frontmatter:
 | `status`      | no       | `complete` \| `in-progress` \| `shelved`            |
 | `tags`        | no       | e.g. `['ESP32-C3', 'BLE']`                          |
 | `difficulty`  | no       | 1–5                                                 |
-| `cost`        | no       | e.g. `'~$5 ($2.60 ESP32-C3 | $2.57 10x IRLZ44N)'`   |
+| `cost`        | no       | e.g. `'~$5 ($2.60 ESP32-C3 \| $2.57 10x IRLZ44N)'`  |
 | `repo`        | no       | link to source                                      |
 | `heroImage`   | no       | image import path                                   |
 

@@ -5,7 +5,7 @@ import { defineConfig, fontProviders } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://project-library.jdankney.workers.dev',
+	site: 'https://jdankney.dev',
 	integrations: [sitemap()],
 	fonts: [
 		{

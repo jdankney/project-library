@@ -65,31 +65,32 @@ This version added a u-blox NEO-M8N to the previous version (nRF52840 + DX-LR30)
 What I used instead was a Gefen VGA to DVI Scaler Plus, or more specifically, the shell of a Gefen VGA to DVI Scaler Plus. It gave me the interior room for the GPS module and moved the whole build off of "cram it into a tin" and toward something that could actually live in the car. At this point, everything is connected, in its new chassis, and waiting for power. However, that is exactly where things get difficult.
 
 Photo of my Gefen VGA to DVI Scaler Plus shell  
-![gefen]()  
+![gefen](../../assets/media/nrf_mesh_v1/gefen.jpg)  
 Since the node was no longer able to be powered via USB:  
 (5V/1A should in theory be enough to power the nRF52840, DX-LR30, and NEO-M8N, but my NEO-M8N has a battery backup, so the MCU startup draw, DX-LR30 startup/transmit draw, and NEO-M8N startup/charging battery backup draw was too much for my 5V laptop USB rail.)  
 I needed to re-engineer the power source. Luckily for me, cars already make their own electricity, so I just needed to find a way to tap an internal power rail in my car. At first I was going to tap the 12V accessory fuse because my dashcam has no problem turning on/off with the car, but upon further inspection, 12V was live at the fuse which forced me to find an alternative system with a shorter shutdown cycle. I sat out in the San Diego sun with my multimeter testing which fuses turn off with the car, which on an Audi with 7 shut-down cycles, can seriously take forever.  
 After vigorous testing I found that my brake light sensor fuse rated at 5A turned on instantly with the car, and turns off ~5-10 seconds after the car is shut off. This was exactly what I was looking for, so I placed a fuse tap on it and ran a wire from the ground and fuse tap across my dashboard to the empty space on the passenger side dashboard.
 
 Photo of the Fuse Tap  
-![fuse_tap]()  
+![fuse_tap](../../assets/media/nrf_mesh_v1/fuse_tap.jpg)  
 Now that I had the power source, I needed a way to crunch down the incoming 12V to 5V. The nRF52840 and NEO-M8N both accept 5V in, but my DX-LR30 only accepts 3.3V. Keeping this in mind, I bought 10 of these Mini360 (MP2307) buck converters for pennies (10 PCS for $2.29 shipped, ~$0.23 per unit.) The Mini360 took 12V in and pushed 5V out, which when hooked up to the nRF52840 and NEO-M8N (DX-LR30 was getting its power via the 3.3V rail on the nRF52840,) allowed the node to start up when the car is running.
 
 V0.2 Mobile Node  
-![gefen_node]()  
+![gefen_node](../../assets/media/nrf_mesh_v1/gefen_node.jpg)  
 From a passive standpoint, the node was finished. It automatically turned on/off with the car, logged GPS location, and overall just worked. This was all great until I tried to send a message (transmit via DX-LR30,) which made the whole system brown out and restart every chip. The only reason for this I can assume is that the Mini360 chips, given their miniature and mass-produced nature, were failing under load. I'd like to point out too that when the car is running it was outputting ~14V for the Mini360 to crunch down to 5V, which generates a lot of heat. On top of the generated heat, the node was living in my car that lives in the sun, making it easily 100F degrees at rest, which I believe led this chip to fail. Before giving up fully on the MP2307s, I tried using another Mini360 because I had so many, but it had the same issue of idling fine but under load just fully collapsing.
+![gefen_debug](../../assets/media/nrf_mesh_v1/gefen_debug.jpg)
 
 At this point, it was time to give up on the Mini360s for me. I bought a XL4016 buck converter but failed to double check the clearance of the chip + heatsink and compare it to the Gefen chassis I was using. This led me to:
 #### V1.0
 Finally, the final iteration of this first run of trying to make a mobile node. With the new XL4016 converting our 14V/12V to 5V, I was successfully able to transmit with no obvious drops in voltage.
 
 XL4016  
-![xl4016]()  
+![xl4016](../../assets/media/nrf_mesh_v1/xl4016.jpg)  
 Unfortunately, I had to change the chassis again because of the clearance issue. This led me to go to my local thrift store and buy a Samsung BD-E5400 Blu-ray player for $4.99, which after having all of its factory internals ripped out, became the new home for my mobile node.  
 As I was designing my [Base Meshtastic Node](/projects/esp32s3-solar-meshnode/), I realized that my 5V rail coming from the buck converter was a huge engineering oversight on my part. As I briefly mentioned earlier, the nRF52840 and NEO-M8N both take 5V or 3.3V, while the DX-LR30 only takes 3.3V. They all share 3.3V input voltage, while they don't all share 5V in. By reducing the output voltage from 5V to 3.3V, I was able to power all 3 chips off of a single rail, whereas before the DX-LR30 was pulling its power from the nRF52840 3.3V rail (which could have been adding to the brown out failures from the V0.2 mobile node.)
 
 Samsung BD-E5400  
-![samsung_node]()  
+![samsung_node](../../assets/media/nrf_mesh_v1/samsung_node.jpg)  
 As you can probably tell, this enclosure gave me much more room, but for the V1.0 of this project I just wanted to get the base node working. If I ever start working on a V2.0 for the mobile node, I will probably take advantage of all of the extra space internally.
 
 ## Firmware
@@ -118,8 +119,9 @@ Final wiring (DX-LR30 + NEO-M8N --> nRF52840 SuperMini):
 | 3.3V        | 3.3V          | —     | Power    |
 | GND         | GND           | —     | Ground   |
 
-Photo of working firmware  
-![nrf_firmware_success]()  
+Photo of working node  
+![nrf_node_success](../../assets/media/nrf_mesh_v1/nrf_node_success.jpg)  
+As you can see, I was able to detect 167 nodes after letting it run for ~20 minutes.
 
 If anyone would like to see the entire source for the meshtastic project, it's available [here on my github](https://github.com/jdankney/nicenano-supermini-meshtastic-firmware-v1).
 
@@ -137,9 +139,6 @@ The boot that finally worked read `SX1262 init success`, immediately pulled in a
 
 ## Result
 It works. The node is on the mesh with GPS, paired to the iOS app over BLE, and living in the Audi powered off a tapped fuse instead of a USB cable and a pile of separate converters. I can text and receive on the mesh from the car, and it reports position while it's out driving around, which was the whole point.
-
-Final Product  
-![final_v1_nrf_node]()  
 
 ## What's next
 The open question is power management with the ignition off. Right now it runs off a tapped fuse, so I need to decide whether to let it sleep hard when the car is off or tap a different fuse to keep it alive as a stationary relay while parked. The nRF52840 helps a lot here since the idle current is under ~5 mA, so keeping it alive is cheap, but I still want to confirm the tap is clean and won't drain the car battery over a few days of not driving.

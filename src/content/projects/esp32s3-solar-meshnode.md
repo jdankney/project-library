@@ -29,9 +29,8 @@ The radio side came up fast. Everything else: the web UI, the RAM, and especiall
 ##### V0.2  
 - Gefen VGA to DVI Scaler Plus (All internals removed, just used as a chassis), weatherproofed with RTV
 
-Base Node V0.1
-![esp32s3-node-v0.1]()
-<!-- PHOTO: the finished node in its junction box, ideally mounted up high, is the money shot for this whole post. -->
+Base Node V0.1  
+![esp32s3_node_v0.1](../../assets/media/esp32s3_mesh_v1/esp32s3_node_v0.1.jpg)
 
 ## How it works
 The whole design is built around **one clean, shared 3.3V rail**. Every part on this node: the ESP32-S3, the DX-LR30, the BME680, and the I2C pull-up resistors, all sit at 3.3V, so there are no logic-level mismatches anywhere on the board to chase down later. That single decision quietly kills off a whole category of subtle bus bugs before they can happen.  
@@ -99,9 +98,9 @@ The node is fully working, on the mesh, relaying traffic, reporting BME680 envir
 
 Sanity check I'd recommend to anyone doing this before sealing the box: boot the whole thing on the battery and Mini360 (off USB) and confirm the BME680 still enumerates at 0x76 under real load. Don't find out it only worked on USB power *after* the RTV cures.
 
-<!-- PHOTO: the telemetry showing up in the app/mesh, or a screenshot of the environmental data over time. -->
-Telemetry Data
-![telem_data]()
+Photo of working node  
+![esp32s3_working](../../assets/media/esp32s3_mesh_v1/esp32s3_working.jpg)
+As you can see I was able to catch 242 nodes after letting it run for ~45 minutes.
 
 
 ## What's next
