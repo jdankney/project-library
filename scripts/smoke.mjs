@@ -116,6 +116,37 @@ scenarios.push(async ({ browser }) => {
 	await context.close();
 });
 
+scenarios.push(async ({ browser }) => {
+	const desk = await open(browser, POST);
+	check((await attr(desk.page, 'page', 'data-ripple-state')) === 'live', 'post desktop: page board live');
+	check((await attr(desk.page, 'page', 'data-parts')) === '["ESP32-S3","LoRa","Meshtastic"]', 'post desktop: chips labelled with the first three tags');
+	await desk.page.hover('.tag');
+	await desk.page.waitForTimeout(100);
+	check((await attr(desk.page, 'page', 'data-ripple-awake')) === 'true', 'post desktop: hovering a tag pings');
+	await desk.page.screenshot({ path: `${OUT}/post-desktop.png` });
+	await desk.page.setViewportSize({ width: 1000, height: 900 });
+	await desk.page.waitForTimeout(500);
+	check((await attr(desk.page, 'page', 'data-ripple-state')) === 'off', 'post resize: narrowing below 1100px turns the board off');
+	await desk.page.setViewportSize(DESKTOP);
+	await desk.page.waitForTimeout(500);
+	check((await attr(desk.page, 'page', 'data-ripple-state')) === 'live', 'post resize: widening brings it back live');
+	check(desk.errors.length === 0, `post desktop: no console errors ${JSON.stringify(desk.errors)}`);
+	await desk.context.close();
+
+	const arrive = await open(browser, '/projects/');
+	await arrive.page.click(`.log-entry a[href="${POST}"]`);
+	await arrive.page.waitForURL(`**${POST}`);
+	await waitForAttr(arrive.page, 'page', 'rippleArrivals', '1', 5000);
+	check((await attr(arrive.page, 'page', 'data-ripple-arrivals')) === '1', 'post arrival: opening a project from the log pings its board');
+	check(arrive.errors.length === 0, `post arrival: no console errors ${JSON.stringify(arrive.errors)}`);
+	await arrive.context.close();
+
+	const phone = await open(browser, POST, { viewport: PHONE });
+	check((await attr(phone.page, 'page', 'data-ripple-state')) === 'off', 'post phone: page board off');
+	check(phone.errors.length === 0, `post phone: no console errors ${JSON.stringify(phone.errors)}`);
+	await phone.context.close();
+});
+
 // ---- runner ----
 
 async function main() {
