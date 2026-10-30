@@ -147,6 +147,55 @@ scenarios.push(async ({ browser }) => {
 	await phone.context.close();
 });
 
+scenarios.push(async ({ browser, noGL }) => {
+	const desk = await open(browser, '/');
+	check((await attr(desk.page, 'hero', 'data-ripple-state')) === 'live', 'home desktop: hero board live');
+	check((await attr(desk.page, 'page', 'data-ripple-state')) === 'live', 'home desktop: page board live behind the log');
+	const geometry = JSON.parse((await attr(desk.page, 'hero', 'data-ripple-geometry')) ?? '{}');
+	const text = await desk.page.evaluate(() => {
+		const hero = document.querySelector('.hero');
+		const block = document.querySelector('[data-board-avoid]');
+		if (!hero || !block) return null;
+		const h = hero.getBoundingClientRect();
+		const r = block.getBoundingClientRect();
+		return { x: r.left - h.left, y: r.top - h.top, w: r.width, h: r.height };
+	});
+	const aligned = !!text && !!geometry.avoid?.[0] && ['x', 'y', 'w', 'h'].every((k) => Math.abs(geometry.avoid[0][k] - text[k]) <= 1);
+	check(aligned, 'home desktop: the dimmed zone matches the hero text after fonts load');
+	const hero = await desk.page.locator('.hero').boundingBox();
+	await desk.page.mouse.click(hero.x + hero.width * 0.62, hero.y + hero.height * 0.3);
+	await desk.page.waitForTimeout(1500);
+	await desk.page.screenshot({ path: `${OUT}/home-desktop.png` });
+	check(desk.errors.length === 0, `home desktop: no console errors ${JSON.stringify(desk.errors)}`);
+	await desk.context.close();
+
+	const phone = await open(browser, '/', { viewport: PHONE });
+	check((await attr(phone.page, 'hero', 'data-ripple-state')) === 'live', 'home phone: hero board live');
+	check((await attr(phone.page, 'page', 'data-ripple-state')) === 'off', 'home phone: page board off');
+	await phone.page.screenshot({ path: `${OUT}/home-phone.png`, fullPage: true });
+	check(phone.errors.length === 0, `home phone: no console errors ${JSON.stringify(phone.errors)}`);
+	await phone.context.close();
+
+	const arrive = await open(browser, '/projects/');
+	await arrive.page.click('header a[href="/"]');
+	await arrive.page.waitForURL(`${BASE}/`);
+	await waitForAttr(arrive.page, 'hero', 'rippleArrivals', '1', 5000);
+	check((await attr(arrive.page, 'hero', 'data-ripple-arrivals')) === '1', 'home arrival: coming in from the nav pings the hero');
+	check(arrive.errors.length === 0, `home arrival: no console errors ${JSON.stringify(arrive.errors)}`);
+	await arrive.context.close();
+
+	const reduced = await open(browser, '/', { reducedMotion: 'reduce' });
+	check((await attr(reduced.page, 'hero', 'data-ripple-state')) === 'static', 'home reduced motion: hero static');
+	await reduced.page.screenshot({ path: `${OUT}/home-reduced.png` });
+	check(reduced.errors.length === 0, `home reduced motion: no console errors ${JSON.stringify(reduced.errors)}`);
+	await reduced.context.close();
+
+	const flat = await open(noGL, '/', { allowGLErrors: true });
+	check((await attr(flat.page, 'hero', 'data-ripple-state')) === 'static', 'home without WebGL: hero static');
+	check(flat.errors.length === 0, `home without WebGL: no console errors ${JSON.stringify(flat.errors)}`);
+	await flat.context.close();
+});
+
 // ---- runner ----
 
 async function main() {

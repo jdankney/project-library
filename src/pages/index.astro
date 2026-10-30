@@ -4,7 +4,8 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import ProjectLog from '../components/ProjectLog.astro';
 import FastFetch from '../components/FastFetch.astro';
-import { Image } from 'astro:assets';
+import RippleBoard from '../components/RippleBoard.astro';
+import MountedPortrait from '../components/MountedPortrait.astro';
 import portrait from '../assets/me.jpg';
 import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
 import { getCollection } from 'astro:content';
@@ -23,11 +24,13 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 	<head>
 		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
 		<style>
+			/* no top padding: the hero sits flush under the header, so the fixed
+			   page board never peeks through a gap above it */
 			main {
 				width: 860px;
 				max-width: calc(100% - 2em);
 				margin: 0 auto;
-				padding: 1em;
+				padding: 0 1em 1em;
 			}
 
 			/* ---- full-bleed sections escape main's constrained width ---- */
@@ -37,27 +40,42 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				margin-right: calc(50% - 50vw);
 			}
 
-			/* ---- Hero: navy, asymmetric, offset wordmark ---- */
+			/* ---- Hero: the ripple board, with the text block and J1 on top.
+			   The dot-grid class is the no-JS fallback; the canvas covers it. ---- */
 			.hero {
-				padding-bottom: 1px; /* clip the dot-grid to the section box */
+				position: relative;
+				overflow: hidden;
+				background-color: rgb(var(--bg));
+				cursor: crosshair;
 			}
 			.hero-inner {
-				max-width: 1060px;
-				margin: 0 auto 0 8%;
-				padding: 4.5rem 1.5rem 4rem;
+				position: relative;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 3rem;
+				min-height: 680px;
+				box-sizing: border-box;
+				padding: 4rem 13% 4rem 8%;
+			}
+			.hero-text {
+				max-width: 820px;
 			}
 			/* the pixel font's glyphs overflow upward past their line box, so the
 			   eyebrow above needs extra clearance to avoid being overlapped */
-			.hero-inner .eyebrow {
+			.hero-text .eyebrow {
 				margin-bottom: 1.6rem;
 			}
 			.wordmark {
 				font-family: var(--font-minecraft);
 				font-size: clamp(2.25rem, 7vw, 4.25rem);
-				line-height: 1.05;
+				/* 1.2, not tighter: when the wordmark wraps, the pixel glyphs of the
+				   two lines would otherwise overlap */
+				line-height: 1.2;
 				letter-spacing: 0.02em;
 				margin: 0 0 1.25rem;
 				color: rgb(var(--text));
+				text-shadow: 0 2px 18px rgba(0, 20, 30, 0.6);
 			}
 
 			/* copper trace running off a pad — the brand mark, borrowed from
@@ -86,48 +104,9 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				font-size: 1.15rem;
 				font-weight: 600;
 				color: rgb(var(--text-muted));
-				margin: 0 0 1.75rem;
+				margin: 0 0 1.5rem;
 				max-width: 32em;
-			}
-			/* ---- Hero showcase: terminal readout + portrait, side by side.
-			   flex-wrap means the portrait drops below on its own once there
-			   isn't room for both, rather than squeezing the fetch panel. ---- */
-			.hero-showcase {
-				display: flex;
-				flex-wrap: wrap;
-				align-items: flex-start;
-				gap: 2rem;
-				margin-top: 1.75rem;
-			}
-			.portrait {
-				flex: 0 0 250px;
-				margin: 0;
-			}
-			.portrait-media {
-				position: relative;
-			}
-			/* offset copper frame peeking out behind the photo — layered rather
-			   than a plain border, so it reads as something placed by hand */
-			.portrait-media::before {
-				content: '';
-				position: absolute;
-				inset: 14px -14px -14px 14px;
-				border: 2px solid var(--copper-rule);
-			}
-			.portrait-media :global(img) {
-				position: relative;
-				display: block;
-				width: 100%;
-				aspect-ratio: 4 / 5;
-				object-fit: cover;
-				object-position: 62% 38%;
-				border: 2px solid var(--copper);
-			}
-			.portrait figcaption {
-				margin-top: 0.75rem;
-				font-family: var(--font-mono);
-				font-size: 0.72rem;
-				color: var(--copper-light);
+				text-shadow: 0 1px 12px rgba(0, 20, 30, 0.8);
 			}
 
 			/* on the bench right now — real state, not decoration */
@@ -135,7 +114,7 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				font-family: var(--font-mono);
 				font-size: 0.85rem;
 				color: rgb(var(--text-muted));
-				margin: 0.9rem 0 0;
+				margin: 0;
 			}
 			.bench .marker {
 				color: var(--copper-light);
@@ -149,13 +128,35 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				border-bottom-color: var(--accent-light);
 			}
 
-			/* ---- Bio strip: paper, warm, personal ---- */
+			.hero-hint {
+				position: absolute;
+				right: 1.25rem;
+				bottom: 0.9rem;
+				margin: 0;
+				font-family: var(--font-mono);
+				font-size: 0.72rem;
+				letter-spacing: 0.06em;
+				color: rgb(var(--text-muted));
+				pointer-events: none;
+			}
+			@media (hover: none) {
+				.hint-mouse {
+					display: none;
+				}
+			}
+			@media (hover: hover) {
+				.hint-touch {
+					display: none;
+				}
+			}
+
+			/* ---- Bio strip: paper, warm, personal; fastfetch lives here now ---- */
 			.bio-strip {
 				background: rgb(var(--paper));
 				border-top: 3px solid var(--copper);
 			}
 			.bio-inner {
-				max-width: 640px;
+				max-width: 1060px;
 				margin: 0 0 0 8%;
 				padding: 3.5rem 1.5rem;
 			}
@@ -163,14 +164,26 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 				font-size: 1.1rem;
 				line-height: 1.65;
 				color: rgb(var(--ink-muted));
-				margin: 0;
+				margin: 0 0 1.75rem;
+				max-width: 36em;
 			}
 			.bio-text strong {
 				color: rgb(var(--bg));
 			}
 
+			/* stacked hero: text first, then J1 centred beneath it */
+			@media (max-width: 900px) {
+				.hero-inner {
+					flex-direction: column;
+					align-items: flex-start;
+					min-height: 0;
+					padding: 3rem 1.25rem 4rem;
+				}
+				.hero-inner > :global(.mount) {
+					align-self: center;
+				}
+			}
 			@media (max-width: 720px) {
-				.hero-inner,
 				.bio-inner {
 					margin-left: 0;
 					padding-left: 1.25rem;
@@ -181,33 +194,31 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 	</head>
 	<body>
 		<Header />
-		<main>
+		<main data-board-quiet>
 			<section class="hero bleed dot-grid">
+				<RippleBoard mode="hero" seed="home" />
 				<div class="hero-inner">
-					<p class="eyebrow">Welcome to</p>
-					<h1 class="wordmark">THE JDANKNEY VAULT</h1>
-					<div class="trace"></div>
-					<p class="tagline">
-						The hardware and software I've built, broken down bit by bit.
-					</p>
-					<div class="hero-showcase">
-						<FastFetch />
-						<figure class="portrait">
-							<div class="portrait-media">
-								<Image src={portrait} alt="James Ankney" width={640} loading="eager" />
-							</div>
-							<figcaption>./jdankney.jpg</figcaption>
-						</figure>
+					<div class="hero-text" data-board-avoid>
+						<p class="eyebrow">906.875 MHz · LongFast</p>
+						<h1 class="wordmark">THE JDANKNEY VAULT</h1>
+						<div class="trace"></div>
+						<p class="tagline">
+							The hardware and software I've built, broken down bit by bit.
+						</p>
+						{
+							onTheBench && (
+								<p class="bench">
+									<span class="marker">▸</span> on the bench:{' '}
+									<a href={`/projects/${onTheBench.id}/`}>{onTheBench.data.title}</a>
+								</p>
+							)
+						}
 					</div>
-					{
-						onTheBench && (
-							<p class="bench">
-								<span class="marker">▸</span> on the bench:{' '}
-								<a href={`/projects/${onTheBench.id}/`}>{onTheBench.data.title}</a>
-							</p>
-						)
-					}
+					<MountedPortrait src={portrait} alt="James Ankney" />
 				</div>
+				<p class="hero-hint" aria-hidden="true">
+					<span class="hint-mouse">click</span><span class="hint-touch">tap</span> to transmit
+				</p>
 			</section>
 
 			<section class="bio-strip bleed">
@@ -219,11 +230,13 @@ const onTheBench = projects.find((p) => p.data.status === 'in-progress');
 						wiring, firmware, and an honest record of the many things that caught fire along
 						the way.
 					</p>
+					<FastFetch />
 				</div>
 			</section>
 
 			<ProjectLog posts={projects} />
 		</main>
+		<RippleBoard mode="page" seed="home" />
 		<Footer />
 	</body>
 </html>

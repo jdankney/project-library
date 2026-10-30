@@ -1,0 +1,41 @@
+---
+// The homepage photo, soldered onto the hero board as component J1. The board
+// measures this element and draws the footprint and pin fan-out around it.
+// To change the photo, replace src/assets/me.jpg; nudge `focus` if the crop is off.
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
+interface Props {
+	src: ImageMetadata;
+	alt: string;
+	/** CSS object-position for the 4:5 crop. */
+	focus?: string;
+	/** Silkscreen reference designator. */
+	ref?: string;
+	/** Silkscreen label under the footprint. */
+	label?: string;
+}
+
+const { src, alt, focus = '62% 38%', ref = 'J1', label = 'jdankney.jpg' } = Astro.props;
+---
+
+<figure class="mount" data-board-mount data-ref={ref} data-label={label}>
+	<Image src={src} alt={alt} width={480} loading="eager" style={`object-position: ${focus}`} />
+</figure>
+
+<style>
+	.mount {
+		flex: none;
+		width: 230px;
+		margin: 0;
+	}
+	.mount :global(img) {
+		display: block;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 4 / 5;
+		object-fit: cover;
+		border: 2px solid var(--copper);
+		box-shadow: 0 10px 30px rgba(0, 10, 20, 0.45);
+	}
+</style>
