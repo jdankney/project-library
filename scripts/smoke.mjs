@@ -74,6 +74,48 @@ scenarios.push(async ({ browser, noGL }) => {
 	await flat.context.close();
 });
 
+scenarios.push(async ({ browser }) => {
+	const { context, page, errors } = await open(browser, '/projects/');
+	await page.hover('header a[href="/about"]');
+	await page.waitForTimeout(100);
+	check((await attr(page, 'page', 'data-ripple-awake')) === 'true', 'interactions: hovering a link wakes the board');
+	for (const row of await page.$$('.log-entry a')) await row.hover();
+	await page.waitForTimeout(200);
+	check((await attr(page, 'page', 'data-ripple-state')) === 'live', 'interactions: survives a fast hover sweep down the log');
+	await page.mouse.move(5, 450);
+	await page.mouse.down();
+	await page.mouse.up();
+	await page.waitForTimeout(1200);
+	await page.screenshot({ path: `${OUT}/projects-transmit.png` });
+	const t0 = Date.now();
+	await waitForAttr(page, 'page', 'rippleAwake', 'false', 90_000);
+	check((await attr(page, 'page', 'data-ripple-awake')) === 'false', `interactions: sim goes idle at rest (${Math.round((Date.now() - t0) / 1000)}s)`);
+	check(errors.length === 0, `interactions: no console errors ${JSON.stringify(errors)}`);
+	await context.close();
+});
+
+scenarios.push(async ({ browser }) => {
+	const { context, page, errors } = await open(browser, '/projects/');
+	await page.keyboard.press('Tab');
+	await page.waitForTimeout(100);
+	check((await attr(page, 'page', 'data-ripple-awake')) === 'true', 'keyboard: tabbing onto a link pings');
+	check(errors.length === 0, `keyboard: no console errors ${JSON.stringify(errors)}`);
+	await context.close();
+});
+
+scenarios.push(async ({ browser }) => {
+	const { context, page, errors } = await open(browser, '/projects/');
+	await Promise.all([page.waitForEvent('load'), page.click('header a[href="/projects"]')]);
+	await waitForAttr(page, 'page', 'rippleArrivals', '1', 5000);
+	check((await attr(page, 'page', 'data-ripple-arrivals')) === '1', 'arrival: clicking a nav link pings once on the next page');
+	await page.focus('header a[href="/projects"]');
+	await Promise.all([page.waitForEvent('load'), page.keyboard.press('Enter')]);
+	await waitForAttr(page, 'page', 'rippleArrivals', '1', 5000);
+	check((await attr(page, 'page', 'data-ripple-arrivals')) === '1', 'arrival: keyboard Enter on a link pings once on the next page');
+	check(errors.length === 0, `arrival: no console errors ${JSON.stringify(errors)}`);
+	await context.close();
+});
+
 // ---- runner ----
 
 async function main() {

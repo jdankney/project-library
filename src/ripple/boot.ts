@@ -1,4 +1,5 @@
 import { BoardController } from './controller';
+import { wireInteractions } from './interactions';
 
 const RESIZE_DEBOUNCE_MS = 120;
 let booted = false;
@@ -29,7 +30,8 @@ export function bootRipples(): void {
 	});
 
 	// web fonts can move the hero text after first paint; re-measure once they land
-	void (document.fonts?.ready ?? Promise.resolve()).then(() => boards.forEach((b) => b.setup()));
+	const settled = (document.fonts?.ready ?? Promise.resolve()).then(() => boards.forEach((b) => b.setup()));
+	wireInteractions(boards, settled);
 
 	const loop = (now: number) => {
 		if (!document.hidden) for (const b of boards) b.frame(now);
