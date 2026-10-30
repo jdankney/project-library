@@ -19,14 +19,17 @@ welcome to fork it or reuse the code under the [license](#license) below.
 │   │   ├── fonts/           Atkinson (body) + MINECRAFT-PE (display)
 │   │   ├── media/           images used inside project write-ups
 │   │   └── me.jpg           homepage portrait
-│   ├── components/          Header, Footer, ProjectLog, FastFetch, BaseHead, icons
+│   ├── components/          Header, Footer, ProjectLog, FastFetch, BaseHead, icons,
+│   │                        RippleBoard (ripple canvas), MountedPortrait (homepage J1 photo)
 │   ├── content/projects/    the project write-ups themselves (Markdown)
 │   ├── layouts/
 │   │   ├── PageLayout.astro   standalone pages (About)
 │   │   └── ProjectPost.astro  individual project write-ups
 │   ├── pages/               routes — /, /about, /projects, /rss.xml, /404
+│   ├── ripple/              the RF ripple engine: WebGL2 wave sim, PCB board, mesh relays
 │   ├── styles/global.css    design tokens + shared utilities
 │   └── content.config.ts    frontmatter schema for the projects collection
+├── scripts/smoke.mjs        headless smoke test for the ripple boards
 ├── astro.config.mjs
 └── package.json
 ```
@@ -53,6 +56,21 @@ Drop a new Markdown file in `src/content/projects/`. Frontmatter:
 
 `status: 'in-progress'` also drives the "on the bench" line on the homepage.
 
+## The ripple board
+
+Every navy page sits on a PCB that `src/ripple/` draws from a seed, with a
+WebGL2 wave simulation on top. The homepage hero always runs; everywhere else
+the water stays still until you hover, tab, click, or arrive from a link. Each
+project's board is seeded from its slug and silkscreened with its first three
+tags. Reduced-motion visitors and browsers without WebGL2 get the board as a
+still image.
+
+To change the homepage photo, replace `src/assets/me.jpg`. If the crop is off,
+adjust `focus` on `<MountedPortrait>` in `src/pages/index.astro`.
+
+`npm run smoke` needs a Chromium: run `npx playwright install chromium` once,
+or point it at a system one with `CHROMIUM_PATH=/usr/bin/chromium`.
+
 ## Commands
 
 | Command                  | Action                                     |
@@ -62,6 +80,9 @@ Drop a new Markdown file in `src/content/projects/`. Frontmatter:
 | `npm run dev -- --host`  | Dev server exposed on the local network     |
 | `npm run build`          | Build the production site to `./dist/`      |
 | `npm run preview`        | Preview the production build locally        |
+| `npm test`               | Unit tests (Vitest)                         |
+| `npm run check`          | Type-check (`astro check`)                  |
+| `npm run smoke`          | Headless smoke test of the built site       |
 
 ## Credit
 
