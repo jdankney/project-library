@@ -1,0 +1,47 @@
+---
+// The RF ripple board: a WebGL wave sim over a procedurally drawn PCB.
+// mode="hero" fills its (position: relative) parent section and scrolls with it.
+// mode="page" is fixed behind the whole page; the [data-board-quiet] column stays calm.
+interface Props {
+	mode: 'hero' | 'page';
+	/** Any string; the same seed always draws the same board. */
+	seed: string;
+	/** Chip silkscreen labels. Omit for the default parts. */
+	parts?: string[];
+}
+
+const { mode, seed, parts } = Astro.props;
+---
+
+<canvas
+	class:list={['ripple-board', `ripple-board--${mode}`]}
+	data-ripple-board
+	data-mode={mode}
+	data-seed={seed}
+	data-parts={parts && parts.length ? JSON.stringify(parts) : undefined}
+	aria-hidden="true"></canvas>
+
+<script>
+	import { bootRipples } from '../ripple/boot';
+	bootRipples();
+</script>
+
+<style>
+	.ripple-board {
+		display: block;
+		pointer-events: none;
+	}
+	.ripple-board--hero {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+	.ripple-board--page {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		z-index: -1;
+	}
+</style>

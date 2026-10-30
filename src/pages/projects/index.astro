@@ -4,6 +4,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import Header from '../../components/Header.astro';
 import ProjectLog from '../../components/ProjectLog.astro';
+import RippleBoard from '../../components/RippleBoard.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
 const projects = (await getCollection('projects')).sort(
@@ -25,8 +26,9 @@ const projects = (await getCollection('projects')).sort(
 		</style>
 	</head>
 	<body>
+		<RippleBoard mode="page" seed="projects" />
 		<Header />
-		<main>
+		<main data-board-quiet>
 			<ProjectLog posts={projects} label="All projects" />
 		</main>
 		<Footer />
