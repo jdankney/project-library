@@ -36,3 +36,5 @@ templates/
 tmp/
 LAYOUT.md
 VOICE.md
+.superpowers/
+docs/superpowers/

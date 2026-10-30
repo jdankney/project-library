@@ -7,6 +7,9 @@ Build notes, parts lists, and the things that went wrong along the way.
 Live at **[jdankney.dev](https://jdankney.dev)**,
 built with [Astro](https://astro.build) and deployed to Cloudflare from this repo.
 
+This is my personal site, so I'm not accepting pull requests or issues. You're
+welcome to fork it or reuse the code under the [license](#license) below.
+
 ## Project structure
 
 ```text
@@ -65,3 +68,12 @@ Drop a new Markdown file in `src/content/projects/`. Frontmatter:
 Started from the [Astro blog starter](https://github.com/withastro/astro/tree/main/examples/blog);
 the base typography owes a debt to [Bear Blog](https://github.com/HermanMartinus/bearblog/).
 Everything else — the design system, layout, and writing — is mine.
+
+## License
+
+- **Code** (components, layouts, pages, styles, scripts, and config) is under the [MIT License](LICENSE).
+- **Writing and media** (the write-ups in `src/content/`, plus the photos and
+  images in `src/assets/`, including `me.jpg`) are © James Ankney, all rights
+  reserved. Please don't republish them.
+- **Fonts** in `src/assets/fonts/` are third-party and keep their own licenses
+  (Atkinson Hyperlegible is under the SIL Open Font License 1.1).
