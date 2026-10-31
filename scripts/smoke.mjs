@@ -32,8 +32,9 @@ const waitForAttr = (page, mode, key, value, timeout) =>
 		.waitForFunction(([sel, k, v]) => document.querySelector(sel)?.dataset[k] === v, [board(mode), key, value], { timeout })
 		.catch(() => {});
 
-async function open(browser, path, { viewport = DESKTOP, reducedMotion = 'no-preference', allowGLErrors = false } = {}) {
+async function open(browser, path, { viewport = DESKTOP, reducedMotion = 'no-preference', allowGLErrors = false, init } = {}) {
 	const context = await browser.newContext({ viewport, reducedMotion });
+	if (init) await context.addInitScript(init);
 	const page = await context.newPage();
 	const errors = [];
 	page.on('console', (m) => {
@@ -44,6 +45,33 @@ async function open(browser, path, { viewport = DESKTOP, reducedMotion = 'no-pre
 	await page.waitForTimeout(700);
 	return { context, page, errors };
 }
+
+/** RGB of one CSS px of a static (2D) board, or null if the canvas holds no 2D context. */
+const boardPixel = (page, mode, x, y) =>
+	page.evaluate(
+		([sel, x, y]) => {
+			const c = document.querySelector(sel);
+			const ctx = c?.getContext('2d');
+			if (!ctx) return null;
+			const k = c.width / c.getBoundingClientRect().width;
+			return [...ctx.getImageData(Math.round(x * k), Math.round(y * k), 1, 1).data.slice(0, 3)];
+		},
+		[board(mode), x, y],
+	);
+const painted = (px) => Array.isArray(px) && px.some((v) => v > 10);
+/** Both outer margin strips of the viewport, as PNG bytes, for before/after comparisons. */
+const margin = async (page) => {
+	const strip = (x) => page.screenshot({ clip: { x, y: 0, width: 220, height: DESKTOP.height } });
+	return Buffer.concat([await strip(0), await strip(DESKTOP.width - 220)]);
+};
+
+// WebGL2 is there, but float render targets aren't (the iOS risk the spec names)
+const NO_FLOAT_TARGETS = () => {
+	const get = WebGL2RenderingContext.prototype.getExtension;
+	WebGL2RenderingContext.prototype.getExtension = function (name) {
+		return /^EXT_color_buffer_/.test(name) ? null : get.call(this, name);
+	};
+};
 
 /** Each scenario gets `{ browser, noGL }` and reports through check(). */
 const scenarios = [];
@@ -76,9 +104,12 @@ scenarios.push(async ({ browser, noGL }) => {
 
 scenarios.push(async ({ browser }) => {
 	const { context, page, errors } = await open(browser, '/projects/');
+	const before = await margin(page);
 	await page.hover('header a[href="/about"]');
 	await page.waitForTimeout(100);
 	check((await attr(page, 'page', 'data-ripple-awake')) === 'true', 'interactions: hovering a link wakes the board');
+	await page.waitForTimeout(900);
+	check(!before.equals(await margin(page)), 'interactions: a hover inside the content column ripples out into the margin');
 	for (const row of await page.$$('.log-entry a')) await row.hover();
 	await page.waitForTimeout(200);
 	check((await attr(page, 'page', 'data-ripple-state')) === 'live', 'interactions: survives a fast hover sweep down the log');
@@ -119,7 +150,7 @@ scenarios.push(async ({ browser }) => {
 scenarios.push(async ({ browser }) => {
 	const desk = await open(browser, POST);
 	check((await attr(desk.page, 'page', 'data-ripple-state')) === 'live', 'post desktop: page board live');
-	check((await attr(desk.page, 'page', 'data-parts')) === '["ESP32-S3","LoRa","Meshtastic"]', 'post desktop: chips labelled with the first three tags');
+	check((await attr(desk.page, 'page', 'data-parts')) === '["ESP32-S3","LoRa","Meshtastic"]', 'post desktop: board is given the first three tags as parts');
 	await desk.page.hover('.tag');
 	await desk.page.waitForTimeout(100);
 	check((await attr(desk.page, 'page', 'data-ripple-awake')) === 'true', 'post desktop: hovering a tag pings');
@@ -194,6 +225,21 @@ scenarios.push(async ({ browser, noGL }) => {
 	check((await attr(flat.page, 'hero', 'data-ripple-state')) === 'static', 'home without WebGL: hero static');
 	check(flat.errors.length === 0, `home without WebGL: no console errors ${JSON.stringify(flat.errors)}`);
 	await flat.context.close();
+});
+
+scenarios.push(async ({ browser }) => {
+	for (const path of ['/projects/', '/']) {
+		const { context, page, errors } = await open(browser, path, { init: NO_FLOAT_TARGETS });
+		check((await attr(page, 'page', 'data-ripple-state')) === 'static', `${path} without float targets: page board static`);
+		check(painted(await boardPixel(page, 'page', 40, 450)), `${path} without float targets: page board is painted, not black`);
+		if (path === '/') {
+			check((await attr(page, 'hero', 'data-ripple-state')) === 'static', '/ without float targets: hero static');
+			check(painted(await boardPixel(page, 'hero', 6, 6)), '/ without float targets: hero is painted, not black');
+			await page.screenshot({ path: `${OUT}/home-no-float-targets.png` });
+		}
+		check(errors.length === 0, `${path} without float targets: no console errors ${JSON.stringify(errors)}`);
+		await context.close();
+	}
 });
 
 // ---- runner ----

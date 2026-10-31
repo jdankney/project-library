@@ -13,6 +13,8 @@ export const PAGE_MIN_WIDTH = 1100;
 /** Below this width the hero stacks and its sim runs at lower resolution. */
 const NARROW = 900;
 const STEPS_PER_FRAME = 2;
+/** Page-board pings from inside the quiet column move this far past its nearest edge, where the water can show them. */
+const QUIET_EDGE_OFFSET = 12;
 /** ~7.5 s at 60 fps with no new pings and nothing in flight, then the sim stops. */
 const SLEEP_AFTER_STEPS = 900;
 const LOOK: Look = { refract: 0.012, normal: 2.6, caustic: 7.0, spec: 1.1, tint: 0.2 };
@@ -36,6 +38,8 @@ export class BoardController {
 	state: BoardState = 'off';
 	/** Cleared by the IntersectionObserver while a hero is scrolled out of view. */
 	visible = true;
+	/** Called when the board goes from idle to needing animation frames, so the frame loop can restart. */
+	onActive: (() => void) | null = null;
 
 	private readonly seed: number;
 	private readonly parts: string[];
@@ -43,6 +47,7 @@ export class BoardController {
 	private mesh: Mesh | null = null;
 	private layout: BoardLayout | null = null;
 	private geometryKey = '';
+	private quiet: Rect | null = null;
 	private hasGL = false;
 	private flashes = new Map<string, number>();
 	private stepCount = 0;
@@ -68,14 +73,20 @@ export class BoardController {
 			return;
 		}
 		const geometry = this.measure();
-		const key = JSON.stringify([geometry, window.innerWidth < NARROW, dpr()]);
+		const key = JSON.stringify([geometry, window.innerWidth <= NARROW, dpr()]);
 		if (key === this.geometryKey && this.state !== 'off') return;
 		this.geometryKey = key;
+		this.quiet = geometry.quiet;
 		this.teardownField();
 		this.layout = buildLayout({ ...geometry, mode: this.mode, seed: this.seed, parts: this.parts });
 		this.canvas.dataset.rippleGeometry = JSON.stringify({ avoid: geometry.avoid, quiet: geometry.quiet });
 		const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 		if (reduced || !this.startLive(geometry)) this.showStatic();
+	}
+
+	/** True while the board has work for the next animation frame. */
+	get needsFrames(): boolean {
+		return this.state === 'live' && this.visible && (this.mode === 'hero' || this.awake || this.wake !== null);
 	}
 
 	/** Viewport px to board-local px. */
@@ -107,6 +118,7 @@ export class BoardController {
 	stir(x: number, y: number, strength: number): void {
 		if (this.state !== 'live') return;
 		if (!this.wake || strength > this.wake.s) this.wake = { x, y, s: strength };
+		this.onActive?.();
 	}
 
 	frame(now: number): void {
@@ -166,7 +178,9 @@ export class BoardController {
 
 	private startLive(g: Measured): boolean {
 		if (!this.layout) return false;
-		const simWidth = this.mode === 'hero' ? (window.innerWidth < NARROW ? 200 : 340) : 280;
+		const simWidth = this.mode === 'hero' ? (window.innerWidth <= NARROW ? 200 : 340) : 280;
+		// createField can take a WebGL context and still fail, so the static path must swap canvases either way
+		this.hasGL = true;
 		const field = createField(this.canvas, {
 			simWidth,
 			damping: this.mode === 'hero' ? 0.994 : 0.992,
@@ -174,15 +188,18 @@ export class BoardController {
 			look: LOOK,
 		});
 		if (!field) return false;
-		this.hasGL = true;
 		if (!this.canvas.dataset.rippleLossHandled) {
 			this.canvas.dataset.rippleLossHandled = 'true';
-			this.canvas.addEventListener('webglcontextlost', () => this.showStatic());
+			this.canvas.addEventListener('webglcontextlost', () => {
+				if (this.state === 'live') this.showStatic();
+			});
 		}
+		// a board texture past the GPU's size limit uploads as nothing, so paint at a lower density instead
+		const paintDpr = Math.min(dpr(), field.maxTextureSize / Math.max(g.width, g.height, 1));
 		const board = document.createElement('canvas');
-		paintBoard(board, this.layout, dpr());
+		paintBoard(board, this.layout, paintDpr);
 		try {
-			field.resize(g.width, g.height, dpr(), board);
+			field.resize(g.width, g.height, paintDpr, board);
 		} catch {
 			field.destroy();
 			return false;
@@ -230,20 +247,29 @@ export class BoardController {
 		this.field.setNodes(this.layout.nodes.map((n) => ({ x: n.x, y: n.y, flash: this.flashes.get(n.id) ?? 0 })));
 	}
 
+	/** Keep a point on the board, and on page boards move it out of the quiet column, where ripples barely show. */
 	private clamp(x: number, y: number): [number, number] {
 		const w = this.layout?.width ?? 1;
 		const h = this.layout?.height ?? 1;
+		const q = this.quiet;
+		if (this.mode === 'page' && q && x > q.x && x < q.x + q.w) {
+			x = x - q.x < q.x + q.w - x ? q.x - QUIET_EDGE_OFFSET : q.x + q.w + QUIET_EDGE_OFFSET;
+		}
 		return [Math.min(Math.max(x, 0), w - 1), Math.min(Math.max(y, 0), h - 1)];
 	}
 
 	private setState(state: BoardState): void {
+		const wasLive = this.state === 'live';
 		this.state = state;
 		this.canvas.dataset.rippleState = state;
 		this.canvas.style.display = state === 'off' ? 'none' : '';
+		if (state === 'live' && !wasLive) this.onActive?.();
 	}
 
 	private setAwake(awake: boolean): void {
+		const was = this.awake;
 		this.awake = awake;
+		if (awake && !was) this.onActive?.();
 		this.canvas.dataset.rippleAwake = String(awake);
 	}
 }

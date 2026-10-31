@@ -20,6 +20,7 @@ export function bootRipples(): void {
 			const board = boards.find((b) => b.host === e.target);
 			if (board) board.visible = e.isIntersecting;
 		}
+		kick();
 	});
 	for (const b of boards) if (b.mode === 'hero') io.observe(b.host);
 
@@ -33,9 +34,18 @@ export function bootRipples(): void {
 	const settled = (document.fonts?.ready ?? Promise.resolve()).then(() => boards.forEach((b) => b.setup()));
 	wireInteractions(boards, settled);
 
+	// frames run only while some board has work; boards call kick() when they wake
+	let running = false;
 	const loop = (now: number) => {
 		if (!document.hidden) for (const b of boards) b.frame(now);
-		requestAnimationFrame(loop);
+		running = boards.some((b) => b.needsFrames);
+		if (running) requestAnimationFrame(loop);
 	};
-	requestAnimationFrame(loop);
+	function kick() {
+		if (running) return;
+		running = true;
+		requestAnimationFrame(loop);
+	}
+	for (const b of boards) b.onActive = kick;
+	kick();
 }

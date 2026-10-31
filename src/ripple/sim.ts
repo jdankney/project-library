@@ -34,6 +34,8 @@ export interface FieldNode {
 
 export interface Field {
 	readonly simWidth: number;
+	/** Largest texture side the GPU accepts, in device px. */
+	readonly maxTextureSize: number;
 	readonly simHeight: number;
 	/** Size the field to its board (CSS px) and upload the painted board as the texture under the water. */
 	resize(cssW: number, cssH: number, dpr: number, board: HTMLCanvasElement): void;
@@ -68,9 +70,14 @@ function compile(gl: WebGL2RenderingContext, type: number, source: string): WebG
 function link(gl: WebGL2RenderingContext, fragSource: string): Program {
 	const program = gl.createProgram();
 	if (!program) throw new Error('createProgram failed');
-	gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, vertSource));
-	gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, fragSource));
+	const vert = compile(gl, gl.VERTEX_SHADER, vertSource);
+	const frag = compile(gl, gl.FRAGMENT_SHADER, fragSource);
+	gl.attachShader(program, vert);
+	gl.attachShader(program, frag);
 	gl.linkProgram(program);
+	// the linked program keeps what it needs; the shader objects would otherwise leak on every rebuild
+	gl.deleteShader(vert);
+	gl.deleteShader(frag);
 	if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program) ?? 'link failed');
 	const uniforms: Uniforms = {};
 	const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS) as number;
@@ -136,6 +143,7 @@ export function createField(canvas: HTMLCanvasElement, opts: FieldOptions): Fiel
 class GLField implements Field {
 	simWidth = 0;
 	simHeight = 0;
+	readonly maxTextureSize: number;
 	private cssW = 1;
 	private cssH = 1;
 	private targets: [Target, Target] | null = null;
@@ -161,6 +169,7 @@ class GLField implements Field {
 		this.canvas = canvas;
 		this.opts = opts;
 		this.programs = programs;
+		this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
 		this.vao = gl.createVertexArray();
 		gl.bindVertexArray(this.vao);
 		this.buffer = gl.createBuffer();
@@ -241,7 +250,7 @@ class GLField implements Field {
 		const q = this.quiet ?? [0, 0, 0, 0];
 		gl.bindVertexArray(this.vao);
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-		gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+		gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 		gl.useProgram(this.programs.render.program);
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.targets[0].texture);
