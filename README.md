@@ -27,9 +27,12 @@ welcome to fork it or reuse the code under the [license](#license) below.
 │   │   └── ProjectPost.astro  individual project write-ups
 │   ├── pages/               routes — /, /about, /projects, /rss.xml, /404
 │   ├── ripple/              the RF ripple engine: WebGL2 wave sim, PCB board, mesh relays
+│   ├── updates/             post update logs: git history, prose diffs, gutter signs
 │   ├── styles/global.css    design tokens + shared utilities
 │   └── content.config.ts    frontmatter schema for the projects collection
-├── scripts/smoke.mjs        headless smoke test for the ripple boards
+├── scripts/
+│   ├── smoke.mjs            headless smoke test of the built site
+│   └── ensure-history.mjs   prebuild: makes sure git history is there for update logs
 ├── astro.config.mjs
 └── package.json
 ```
@@ -53,8 +56,56 @@ Drop a new Markdown file in `src/content/projects/`. Frontmatter:
 | `cost`        | no       | e.g. `'~$5 ($2.60 ESP32-C3 \| $2.57 10x IRLZ44N)'`  |
 | `repo`        | no       | link to source                                      |
 | `heroImage`   | no       | image import path                                   |
+| `history`     | no       | versions from before the post was in git (see below) |
 
 `status: 'in-progress'` also drives the "on the bench" line on the homepage.
+
+## Publishing a post update
+
+Posts keep a changelog that's read straight from this repo's git history. To
+publish an update, edit the post and commit with a marker as the first line of
+the commit message:
+
+```text
+update(esp32s3-solar-meshnode): v1.0 finished the install
+```
+
+- `update(<slug>)`: the slug is the post's filename without `.md`. One commit
+  can update several posts: `update(slug-a, slug-b): …`.
+- A version at the start of the summary (`v1.0`, `v2`, `v0.3.1`) becomes the
+  entry's version label. Leave it out and the entry just shows the summary.
+- Commits without the marker (typo fixes, CSS, anything else) never get their
+  own entry. Their changes to a post fold into that post's next marked update.
+  Everything before a post's first marked update counts as the original post.
+- Changes to frontmatter (title, tags, status) aren't diffed. A marked commit
+  that only touches frontmatter shows up as "no text changes".
+- Merge however you like, but don't squash-merge: squashing rewrites the
+  commits and drops their markers.
+
+On the post, the header gets an UPDATED date and a `$ git log · N updates`
+toggle. Each entry opens to a readable word diff, and the margin of the post
+shows what the newest update changed (green: added, blue: changed, red
+notch: something was removed there). Opening an older entry moves the
+margin signs to that update.
+
+Versions from before a post was in git go in its frontmatter, oldest first.
+They show in the log as `pre-git` with no diff:
+
+```yaml
+history:
+  - { version: v0.1, date: 2025-12, note: 'Altoids tin, USB power' }
+  - { version: v0.2, date: 2026-05, note: 'moved into a Gefen shell' }
+```
+
+`date` is `YYYY-MM` or `YYYY-MM-DD`. Without `history`, the log starts with a
+"published" entry on the post's `pubDate`, and the log only appears once the
+post has its first marked update.
+
+**If a deploy build fails with an `[ensure-history]` or "post update history"
+error:** the build needs the full git history, not a shallow clone or a bare
+copy of the files. `npm run build` already tries `git fetch --unshallow` on its
+own. If that fails, make sure the host builds from a git checkout of this repo
+(Cloudflare's Git integration does), and that it can fetch from the remote.
 
 ## The ripple board
 
