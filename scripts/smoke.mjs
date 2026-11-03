@@ -295,6 +295,22 @@ scenarios.push(async ({ browser }) => {
 	await noJs.context.close();
 });
 
+// ---- 404 ----
+
+scenarios.push(async ({ browser }) => {
+	const { context, page, errors } = await open(browser, '/no-such-page/');
+	check((await attr(page, 'page', 'data-ripple-state')) === 'live', '404: the page board is live');
+	const path = await page.evaluate(() => document.querySelector('[data-missing-path]')?.textContent ?? null);
+	check(path === '/no-such-page/', `404: shows the path that was asked for (${path})`);
+	const links = await page.evaluate(() => [...document.querySelectorAll('main a')].map((a) => a.getAttribute('href')));
+	check(links.includes('/') && links.includes('/projects/'), `404: links home and to the project log ${JSON.stringify(links)}`);
+	await page.screenshot({ path: `${OUT}/404.png` });
+	// the browser logs the page's own 404 status as an error; that one is the point
+	const real = errors.filter((e) => !/status of 404/.test(e));
+	check(real.length === 0, `404: no console errors ${JSON.stringify(real)}`);
+	await context.close();
+});
+
 // ---- runner ----
 
 async function main() {

@@ -1,7 +1,8 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import RippleBoard from '../components/RippleBoard.astro';
 import { SITE_TITLE } from '../consts';
 
 // A few on-brand "error" lines; one is picked at random each build.
@@ -20,72 +21,54 @@ const quip = quips[Math.floor(Math.random() * quips.length)];
 	<head>
 		<BaseHead title={`404 — ${SITE_TITLE}`} description="Page not found." />
 		<style>
-			main {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: 0 auto;
-				padding: 4rem 1em;
-				text-align: center;
-			}
 			.code {
-				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-				font-size: 6rem;
-				font-weight: 700;
+				font-family: var(--font-minecraft), monospace;
+				font-size: 5rem;
 				line-height: 1;
-				color: rgb(var(--accent));
-				margin: 0;
-				letter-spacing: 0.05em;
-			}
-			.quip {
-				font-size: 1.25rem;
-				color: rgb(var(--gray-dark));
-				margin: 1.25rem 0 2rem;
+				margin: 0 0 1.5rem;
+				color: var(--copper-light);
+				letter-spacing: 0.06em;
 			}
 			.terminal {
-				text-align: left;
-				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-				font-size: 0.85rem;
-				background: rgba(var(--gray), 12%);
-				border: 1px solid rgba(var(--gray), 25%);
-				border-radius: 10px;
+				font-family: var(--font-mono);
+				font-size: 0.9rem;
+				line-height: 1.8;
+				background: rgb(var(--bg-deep));
+				border-left: 2px solid var(--copper);
 				padding: 1rem 1.25rem;
-				margin: 0 auto 2.5rem;
-				max-width: 460px;
-				color: rgb(var(--gray-dark));
-				line-height: 1.6;
+				color: rgb(var(--text));
+				overflow-wrap: anywhere;
 			}
-			.terminal .prompt { color: rgb(var(--accent)); }
-			.terminal .err { color: #e0524b; }
-			.home-link {
-				display: inline-block;
-				padding: 0.6rem 1.4rem;
-				border: 1px solid rgb(var(--accent));
-				border-radius: 8px;
-				text-decoration: none;
-				color: rgb(var(--accent));
-				font-weight: 600;
-				transition: background 0.15s ease, color 0.15s ease;
+			.terminal p { margin: 0; }
+			.prompt { color: var(--copper-light); }
+			.err { color: #f1a39a; }
+			.quip {
+				color: rgb(var(--text-muted));
+				margin: 0.6rem 0 !important;
+				font-family: var(--font-atkinson), sans-serif;
+				font-size: 1rem;
 			}
-			.home-link:hover {
-				background: rgb(var(--accent));
-				color: white;
-			}
+			.terminal a { color: var(--accent-light); }
+			.terminal a:hover { color: var(--accent); }
 		</style>
 	</head>
 	<body>
+		<RippleBoard mode="page" seed="404" />
 		<Header />
-		<main>
+		<main data-board-quiet>
 			<p class="code">404</p>
-			<p class="quip">{quip}</p>
-
 			<div class="terminal">
-				<span class="prompt">j4mes@archangel</span>:~$ locate that-page<br />
-				<span class="err">locate: no matches found</span><br />
-				<span class="prompt">j4mes@archangel</span>:~$ cd /home<br />
+				<p><span class="prompt">j4mes@archangel:~$</span> cd <span data-missing-path>that-page</span></p>
+				<p class="err">bash: cd: <span data-missing-path>that-page</span>: No such file or directory</p>
+				<p class="quip">{quip}</p>
+				<p><span class="prompt">j4mes@archangel:~$</span> <a href="/">cd ~</a> <span class="prompt"># back to safety</span></p>
+				<p><span class="prompt">j4mes@archangel:~$</span> <a href="/projects/">cd ../projects</a></p>
 			</div>
-
-			<a class="home-link" href="/">&larr; Back to safety</a>
 		</main>
 		<Footer />
+		<script is:inline>
+			// the same 404.html answers every missing URL, so the path comes from the address bar
+			for (const el of document.querySelectorAll('[data-missing-path]')) el.textContent = decodeURI(location.pathname);
+		</script>
 	</body>
 </html>
