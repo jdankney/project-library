@@ -1,12 +1,17 @@
 // @ts-check
 
 import sitemap from '@astrojs/sitemap';
+import remarkLineTags from './src/updates/remark-line-tags.ts';
 import { defineConfig, fontProviders } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://jdankney.dev',
 	integrations: [sitemap()],
+	markdown: {
+		// tags post blocks with their source line so update signs can find them
+		remarkPlugins: [remarkLineTags],
+	},
 	fonts: [
 		{
 			provider: fontProviders.local(),
