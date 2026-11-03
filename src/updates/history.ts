@@ -50,6 +50,8 @@ interface FileCommit {
 	subject: string;
 	/** The file's repo-relative path at this commit (it follows renames). */
 	path: string;
+	/** The path in this commit's parent, or null when this commit added the file. */
+	parentPath: string | null;
 }
 
 /** Every commit that touched the file, oldest first, following renames. */
@@ -63,7 +65,8 @@ function fileCommits(root: string, relPath: string): FileCommit[] {
 		if (!status) continue;
 		const cols = status.split('\t');
 		// %aI keeps the author's UTC offset, so its date part is their local calendar day
-		commits.push({ hash, date: new Date(iso), day: iso.slice(0, 10), subject, path: cols[cols.length - 1] });
+		const parentPath = cols[0] === 'A' ? null : cols[1];
+		commits.push({ hash, date: new Date(iso), day: iso.slice(0, 10), subject, path: cols[cols.length - 1], parentPath });
 	}
 	return commits.reverse();
 }
@@ -80,6 +83,10 @@ const memo = new Map<string, Update[]>();
 export function readUpdates(filePath: string): Update[] {
 	const root = repoRoot(filePath);
 	const relPath = relative(root, resolve(filePath));
+	// a shallow clone's oldest commit looks like the file was just added, which would invent a diff
+	if (git(root, ['rev-parse', '--is-shallow-repository']).trim() === 'true') {
+		throw new HistoryError('This is a shallow clone, so post history is incomplete (run `git fetch --unshallow`).');
+	}
 	const head = git(root, ['rev-parse', 'HEAD']).trim();
 	const key = `${head}:${relPath}`;
 	const cached = memo.get(key);
@@ -91,11 +98,13 @@ export function readUpdates(filePath: string): Update[] {
 
 	const updates: Update[] = [];
 	let previous: string | null = null;
-	commits.forEach((c, i) => {
+	commits.forEach((c) => {
 		const marker = parseMarker(c.subject);
 		if (!marker || !marker.slugs.some((s) => names.has(s))) return;
 		const newBody = bodyAt(c);
-		const oldBody = previous ?? (i > 0 ? bodyAt(commits[i - 1]) : '');
+		// the first update's baseline is its own parent: on a merged branch, the commit before it by date
+		// can be an unrelated edit made on main
+		const oldBody = previous ?? (c.parentPath ? postBody(git(root, ['show', `${c.hash}^:${c.parentPath}`])) : '');
 		updates.push({ hash: c.hash, date: c.date, day: c.day, version: marker.version, summary: marker.summary, oldBody, newBody });
 		previous = newBody;
 	});

@@ -139,6 +139,23 @@ describe('readUpdates', () => {
 		expect(readUpdates(file('a.md'))[0].day).toBe('2026-11-02');
 	});
 
+	it("diffs a branch's first update against its own parent, not a newer commit on main", () => {
+		commit('add post', { 'a.md': post('a', 'one\n\nmid\n\nend\n') });
+		git('checkout', '-q', '-b', 'side');
+		day = 5; // the side commit is dated after the main one below
+		commit('update(a): side edit', { 'a.md': post('a', 'ONE side\n\nmid\n\nend\n') });
+		git('checkout', '-q', '-');
+		day = 2;
+		commit('typo on main', { 'a.md': post('a', 'one\n\nmid\n\nEND main\n') });
+		execFileSync('git', ['merge', '-q', '--no-ff', '-m', 'Merge branch side', 'side'], {
+			cwd: repo,
+			env: { ...process.env, GIT_AUTHOR_DATE: '2026-02-01T12:00:00Z', GIT_COMMITTER_DATE: '2026-02-01T12:00:00Z' },
+		});
+		const [u] = readUpdates(file('a.md'));
+		expect(u.oldBody).toBe('one\n\nmid\n\nend');
+		expect(u.newBody).toBe('ONE side\n\nmid\n\nend');
+	});
+
 	it('keeps a frontmatter-only marked commit, with equal bodies', () => {
 		commit('add post', { 'a.md': post('a', 'one\n', 'Node V1.0') });
 		commit('update(a): renumbered', { 'a.md': post('a', 'one\n', 'Node V0.3') });
@@ -149,6 +166,18 @@ describe('readUpdates', () => {
 	it('treats a post whose first commit is marked as added from nothing', () => {
 		commit('update(a): v0.1 first write-up', { 'a.md': post('a', 'one\n') });
 		expect(readUpdates(file('a.md'))[0]).toMatchObject({ oldBody: '', newBody: 'one' });
+	});
+
+	it('refuses a shallow clone instead of inventing history from its cut-off root', () => {
+		commit('add post', { 'a.md': post('a', 'one\n') });
+		commit('update(a): v0.2 two', { 'a.md': post('a', 'one\n\ntwo\n') });
+		const shallow = mkdtempSync(join(tmpdir(), 'shallow-'));
+		try {
+			execFileSync('git', ['clone', '-q', '--depth', '1', `file://${repo}`, shallow]);
+			expect(() => readUpdates(join(shallow, 'posts', 'a.md'))).toThrow(/shallow clone/);
+		} finally {
+			rmSync(shallow, { recursive: true, force: true });
+		}
 	});
 
 	it('throws a HistoryError outside a git repo', () => {

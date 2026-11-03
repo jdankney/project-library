@@ -81,6 +81,9 @@ update(esp32s3-solar-meshnode): v1.0 finished the install
   that only touches frontmatter shows up as "no text changes".
 - Merge however you like, but don't squash-merge: squashing rewrites the
   commits and drops their markers.
+- Keep a post's marked updates on one line of history. If two branches each
+  make a marked update to the same post, the later one is diffed against the
+  earlier one, so its diff can include the other branch's edits.
 
 On the post, the header gets an UPDATED date and a `$ git log · N updates`
 toggle. Each entry opens to a readable word diff, and the margin of the post
