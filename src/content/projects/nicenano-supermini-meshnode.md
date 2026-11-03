@@ -1,5 +1,5 @@
 ---
-title: 'DIY Meshtastic Mobile Node (nRF52840 + LoRa + GPS) V1.0'
+title: 'DIY Meshtastic Mobile Node (nRF52840 + LoRa + GPS) V0.3'
 description: 'Building a low-current Meshtastic node for my Audi A4 featuring an nRF52840, DX-LR30 (SX1262), and a u-blox NEO-M8N.'
 pubDate: 'Dec 23 2025'
 status: 'complete'
@@ -31,7 +31,7 @@ I wanted to create a BLE-based mobile [Meshtastic](https://meshtastic.org/) node
 - Mini360 / MP2307 buck converter (14V/12V --> 5V)
 - Gefen VGA to DVI Scaler Plus (All internals removed, just used as a chassis)
 
-##### V1.0  
+##### V0.3  
 - nRF52840
 - DX-LR30
 - NEO-M8N
@@ -85,7 +85,7 @@ From a passive standpoint, the node was finished. It automatically turned on/off
 ![gefen_debug](../../assets/media/nrf_mesh_v1/gefen_debug.jpg)
 
 At this point, it was time to give up on the Mini360s for me. I bought a XL4016 buck converter but failed to double check the clearance of the chip + heatsink and compare it to the Gefen chassis I was using. This led me to:
-#### V1.0
+#### V0.3
 Finally, the final iteration of this first run of trying to make a mobile node. With the new XL4016 converting our 14V/12V to 5V, I was successfully able to transmit with no obvious drops in voltage.
 
 XL4016  

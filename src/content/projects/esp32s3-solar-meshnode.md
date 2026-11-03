@@ -1,5 +1,5 @@
 ---
-title: 'DIY Meshtastic Base Node (ESP32-S3 + LoRa + Solar + BME680) V1.0'
+title: 'DIY Meshtastic Base Node (ESP32-S3 + LoRa + Solar + BME680) V0.3'
 description: 'A solar-powered, always-on Meshtastic base station with environmental telemetry | ESP32-S3, DX-LR30 (SX1262), and a bare BME680 that fought me the whole way.'
 pubDate: 'Dec 23 2025'
 status: 'complete'
