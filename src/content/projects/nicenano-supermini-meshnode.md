@@ -6,6 +6,10 @@ status: 'complete'
 tags: ['nRF52840', 'LoRa', 'GPS', 'Meshtastic']
 difficulty: 4
 cost: '~$35 in total ($3.88 nRF52840 | $5.85 DX-LR30 | $14.76 NEO-M8N | $5.50 XL4016 | $5 BD-E5400)'
+history:
+  - { version: v0.1, date: 2025-12, note: 'nRF52840 + DX-LR30 in an Altoids tin, USB power' }
+  - { version: v0.2, date: 2026-05, note: 'added NEO-M8N GPS and a Mini360 buck, moved into a Gefen shell' }
+  - { version: v0.3, date: 2026-07, note: 'XL4016 buck, transmits cleanly on car power' }
 ---
 
 > **Before reading this post:**

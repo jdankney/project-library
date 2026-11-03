@@ -5,6 +5,10 @@ pubDate: 'Dec 23 2025'
 status: 'complete'
 tags: ['ESP32-S3', 'LoRa', 'Meshtastic', 'BME680', 'Solar', 'I2C']
 difficulty: 3
+history:
+  - { version: v0.1, date: 2025-12, note: 'metal junction box, sealed with RTV' }
+  - { version: v0.2, date: 2026-05, note: 'moved into a gutted Gefen scaler chassis' }
+  - { version: v0.3, date: 2026-07, note: 'solar power chain and BME680 telemetry working, 242 nodes heard' }
 ---
 
 > **Before reading this post:**
