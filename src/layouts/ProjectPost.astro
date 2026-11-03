@@ -10,12 +10,15 @@ import { Image } from 'astro:assets';
 type Props = CollectionEntry<'projects'>['data'] & {
 	/** Collection id; seeds this post's board so every project gets its own. */
 	slug: string;
+	/** Date of the newest marked update, from git. */
+	updated?: Date | null;
 };
 
 const {
 	title,
 	description,
 	pubDate,
+	updated,
 	heroImage,
 	status,
 	tags,
@@ -187,6 +190,34 @@ const statusLabel = {
 				text-align: left;
 			}
 
+			/* ---- update signs: which blocks the shown update touched (see src/updates/line-marks.ts) ---- */
+			.post-body {
+				--upd-add: #6fcf7c;
+				--upd-chg: var(--accent);
+				--upd-rm-color: #e5675a;
+			}
+			.post-body > :global([data-line]) { position: relative; }
+			.post-body > :global([data-line])::before {
+				content: '';
+				position: absolute;
+				left: -0.75rem;
+				top: 0.25em;
+				bottom: 0.25em;
+				width: 3px;
+				background: var(--upd-bar, transparent);
+				pointer-events: none;
+			}
+			.post-body > :global([data-line])::after {
+				content: '';
+				display: var(--upd-rm, none);
+				position: absolute;
+				left: calc(-0.75rem - 2px);
+				top: var(--upd-rm-y, 0);
+				border-left: 7px solid var(--upd-rm-color);
+				border-block: 5px solid transparent;
+				pointer-events: none;
+			}
+
 			@media (max-width: 720px) {
 				.title-block h1 { font-size: 1.8rem; }
 				.meta { gap: 1rem; }
@@ -210,6 +241,13 @@ const statusLabel = {
 					<span class="meta-label">Date</span>
 					<span class="meta-value"><FormattedDate date={pubDate} /></span>
 				</div>
+
+				{updated && (
+					<div class="meta-item">
+						<span class="meta-label">Updated</span>
+						<span class="meta-value"><FormattedDate date={updated} /></span>
+					</div>
+				)}
 
 				{status && (
 					<div class="meta-item">
@@ -245,6 +283,8 @@ const statusLabel = {
 				)}
 			</div>
 
+			<slot name="updates" />
+
 			{tags && tags.length > 0 && (
 				<div class="tags">
 					{tags.map((tag) => <span class="tag" data-ping>{tag}</span>)}
@@ -257,7 +297,7 @@ const statusLabel = {
 				</div>
 			)}
 
-			<div class="prose">
+			<div class="prose post-body">
 				<slot />
 			</div>
 		</main>

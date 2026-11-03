@@ -60,6 +60,7 @@ describe('readUpdates', () => {
 		expect(u).toEqual({
 			hash,
 			date: new Date('2026-01-02T12:00:00Z'),
+			day: '2026-01-02',
 			version: 'v0.2',
 			summary: 'two',
 			oldBody: 'one',
@@ -123,6 +124,19 @@ describe('readUpdates', () => {
 			env: { ...process.env, GIT_AUTHOR_DATE: '2026-02-01T12:00:00Z', GIT_COMMITTER_DATE: '2026-02-01T12:00:00Z' },
 		});
 		expect(readUpdates(file('a.md')).map((u) => u.summary)).toEqual(['from a branch']);
+	});
+
+	it("records the calendar day in the author's own timezone, not UTC", () => {
+		commit('add post', { 'a.md': post('a', 'one\n') });
+		writeFileSync(file('a.md'), post('a', 'one\n\ntwo\n'));
+		git('add', '-A');
+		// 4:23 pm on Nov 2 in California is already Nov 3 in UTC
+		const when = '2026-11-02T16:23:11-08:00';
+		execFileSync('git', ['commit', '-q', '-m', 'update(a): evening edit'], {
+			cwd: repo,
+			env: { ...process.env, GIT_AUTHOR_DATE: when, GIT_COMMITTER_DATE: when },
+		});
+		expect(readUpdates(file('a.md'))[0].day).toBe('2026-11-02');
 	});
 
 	it('keeps a frontmatter-only marked commit, with equal bodies', () => {

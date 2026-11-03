@@ -1,0 +1,154 @@
+---
+import type { LogEntry } from '../updates/log';
+
+interface Props {
+	entries: LogEntry[];
+	/** Short hash → CSS that shows that update's gutter signs. */
+	marks: Record<string, string>;
+}
+
+const { entries, marks } = Astro.props;
+const COMMIT_URL = 'https://github.com/jdankney/project-library/commit/';
+const newest = entries.find((e) => e.kind === 'update');
+const count = entries.length;
+// JSON inside <script> must not be able to close the tag
+const marksJson = JSON.stringify(marks).replace(/</g, '\\u003c');
+---
+
+<details class="update-log">
+	<summary><span class="prompt">$</span> git log · {count} {count === 1 ? 'update' : 'updates'}</summary>
+	<ol class="entries">
+		{entries.map((e) =>
+			e.kind === 'update' ? (
+				<li>
+					<details class="entry" data-update={e.short}>
+						<summary class="row">
+							<a class="hash" href={COMMIT_URL + e.hash}>{e.short}</a>
+							<span class="date">{e.date}</span>
+							<span class="ver">{e.version ?? ''}</span>
+							<span class="sum">{e.summary}</span>
+							{e.diff.hunks.length ? (
+								<span class="bar" aria-label={`${e.diff.added} words added, ${e.diff.removed} removed`}>
+									<span class="plus">{'+'.repeat(e.bar.plus)}</span><span class="minus">{'-'.repeat(e.bar.minus)}</span>
+								</span>
+							) : (
+								<span class="bar none">no text changes</span>
+							)}
+						</summary>
+						{e.diff.hunks.length > 0 && (
+							<div class="diff">
+								{e.diff.hunks.map((h) => (
+									<section class="hunk">
+										<div class="heading">{h.heading}</div>
+										{h.blocks.map((b) =>
+											b.kind === 'changed' ? (
+												<p>
+													{b.parts.map((p) => (p.op === 'ins' ? <ins>{p.text}</ins> : p.op === 'del' ? <del>{p.text}</del> : p.text))}
+												</p>
+											) : b.kind === 'added' ? (
+												<p><ins>{b.text}</ins></p>
+											) : b.kind === 'removed' ? (
+												<p><del>{b.text}</del></p>
+											) : (
+												<p class="image">
+													{b.op === 'added' && <ins>image added: {b.to}</ins>}
+													{b.op === 'removed' && <del>image removed: {b.from}</del>}
+													{b.op === 'replaced' && <span>image replaced: <del>{b.from}</del> → <ins>{b.to}</ins></span>}
+												</p>
+											),
+										)}
+									</section>
+								))}
+							</div>
+						)}
+					</details>
+				</li>
+			) : (
+				<li class="row quiet">
+					<span class="hash">{e.kind === 'pre-git' ? 'pre-git' : 'published'}</span>
+					<span class="date">{e.date}</span>
+					<span class="ver">{e.kind === 'pre-git' ? e.version : ''}</span>
+					<span class="sum">{e.kind === 'pre-git' ? e.note : ''}</span>
+				</li>
+			),
+		)}
+	</ol>
+</details>
+
+{newest && <style is:inline data-update-marks set:html={marks[newest.short] ?? ''} />}
+<script type="application/json" id="update-marks" set:html={marksJson} />
+
+<script>
+	import { wireUpdateLog } from '../updates/client';
+	wireUpdateLog();
+</script>
+
+<style>
+	.update-log {
+		margin: -0.5rem 0 1.25rem;
+		font-family: var(--font-mono);
+		font-size: 0.8rem;
+		color: rgb(var(--text-muted));
+	}
+	.update-log > summary {
+		display: inline-block;
+		cursor: pointer;
+		color: var(--accent-light);
+		border: 1px solid rgba(0, 162, 255, 0.4);
+		padding: 0.15rem 0.6rem;
+		list-style: none;
+	}
+	.update-log > summary::-webkit-details-marker { display: none; }
+	.update-log > summary::after { content: ' ▸'; }
+	.update-log[open] > summary::after { content: ' ▾'; }
+	.update-log > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+	.prompt { color: var(--copper-light); }
+
+	.entries {
+		list-style: none;
+		margin: 0.6rem 0 0;
+		padding: 0.5rem 0.75rem;
+		background: rgb(var(--bg-deep));
+		border-left: 2px solid var(--copper);
+	}
+	.row {
+		display: grid;
+		grid-template-columns: 4.5rem 6.5rem 3rem 1fr auto;
+		gap: 0.6rem;
+		align-items: baseline;
+		line-height: 1.8;
+	}
+	.entry > summary { cursor: pointer; list-style: none; }
+	.entry > summary::-webkit-details-marker { display: none; }
+	.entry > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+	.entry[open] > summary { color: rgb(var(--text)); }
+	.hash { color: var(--copper-light); }
+	a.hash { text-decoration: none; }
+	a.hash:hover { text-decoration: underline; }
+	.ver { color: rgb(var(--text)); }
+	.bar .plus { color: #6fcf7c; }
+	.bar .minus { color: #e5675a; }
+	.bar.none { font-style: italic; opacity: 0.7; }
+	.quiet { opacity: 0.65; }
+
+	.diff { margin: 0.3rem 0 0.8rem 1rem; }
+	.hunk { margin: 0.5rem 0; padding: 0.5rem 0.7rem; background: rgba(0, 0, 0, 0.18); }
+	.heading { color: var(--copper-light); font-size: 0.72rem; margin-bottom: 0.2rem; }
+	.hunk p {
+		margin: 0.25rem 0;
+		font-family: var(--font-atkinson, sans-serif);
+		font-size: 0.9rem;
+		line-height: 1.6;
+		color: rgb(var(--text));
+		white-space: pre-line;
+	}
+	del { color: #f1a39a; background: rgba(229, 103, 90, 0.18); text-decoration: line-through; }
+	ins { color: #b5f0bd; background: rgba(111, 207, 124, 0.18); text-decoration: none; }
+	del + ins { margin-left: 0.3em; }
+
+	@media (max-width: 600px) {
+		.row { grid-template-columns: 4.5rem 1fr; row-gap: 0; }
+		.ver, .sum { grid-column: span 1; }
+		.bar { display: none; }
+	}
+</style>

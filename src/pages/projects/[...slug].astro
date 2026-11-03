@@ -1,9 +1,16 @@
 ---
 import { type CollectionEntry, getCollection, render } from 'astro:content';
+import UpdateLog from '../../components/UpdateLog.astro';
 import ProjectPost from '../../layouts/ProjectPost.astro';
+import { readUpdates, unknownMarkerSlugs } from '../../updates/history';
+import { marksCss, updateMarks } from '../../updates/line-marks';
+import { buildLog } from '../../updates/log';
 
 export async function getStaticPaths() {
 	const projects = await getCollection('projects');
+	for (const { hash, slug } of unknownMarkerSlugs('src/content/projects')) {
+		console.warn(`[updates] commit ${hash.slice(0, 7)} marks an update to "${slug}", but no post has ever had that name`);
+	}
 	return projects.map((project) => ({
 		params: { slug: project.id },
 		props: project,
@@ -13,8 +20,15 @@ type Props = CollectionEntry<'projects'>;
 
 const project = Astro.props;
 const { Content } = await render(project);
+
+const updates = readUpdates(project.filePath!);
+const log = buildLog(updates, project.data.history, project.data.pubDate);
+const marks = Object.fromEntries(
+	[...updateMarks(updates, project.body ?? '')].map(([hash, m]) => [hash.slice(0, 7), marksCss(m)]),
+);
 ---
 
-<ProjectPost {...project.data} slug={project.id}>
+<ProjectPost {...project.data} slug={project.id} updated={log.updated}>
+	{log.show && <UpdateLog slot="updates" entries={log.entries} marks={marks} />}
 	<Content />
 </ProjectPost>

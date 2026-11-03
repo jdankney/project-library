@@ -6,6 +6,8 @@ import { parseMarker } from './markers';
 export interface Update {
 	hash: string;
 	date: Date;
+	/** 'YYYY-MM-DD' in the author's own timezone, which is the day the update was actually made. */
+	day: string;
 	version: string | null;
 	summary: string;
 	/** Body (frontmatter stripped) at the previous marked update, or just before the first one. */
@@ -44,6 +46,7 @@ const slugOf = (path: string) => basename(path).replace(/\.mdx?$/, '');
 interface FileCommit {
 	hash: string;
 	date: Date;
+	day: string;
 	subject: string;
 	/** The file's repo-relative path at this commit (it follows renames). */
 	path: string;
@@ -59,7 +62,8 @@ function fileCommits(root: string, relPath: string): FileCommit[] {
 		const status = rest.find((l) => /^[AMRC]/.test(l));
 		if (!status) continue;
 		const cols = status.split('\t');
-		commits.push({ hash, date: new Date(iso), subject, path: cols[cols.length - 1] });
+		// %aI keeps the author's UTC offset, so its date part is their local calendar day
+		commits.push({ hash, date: new Date(iso), day: iso.slice(0, 10), subject, path: cols[cols.length - 1] });
 	}
 	return commits.reverse();
 }
@@ -92,7 +96,7 @@ export function readUpdates(filePath: string): Update[] {
 		if (!marker || !marker.slugs.some((s) => names.has(s))) return;
 		const newBody = bodyAt(c);
 		const oldBody = previous ?? (i > 0 ? bodyAt(commits[i - 1]) : '');
-		updates.push({ hash: c.hash, date: c.date, version: marker.version, summary: marker.summary, oldBody, newBody });
+		updates.push({ hash: c.hash, date: c.date, day: c.day, version: marker.version, summary: marker.summary, oldBody, newBody });
 		previous = newBody;
 	});
 	updates.reverse();

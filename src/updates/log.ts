@@ -44,6 +44,12 @@ export function formatPreGitDate(date: string): string {
 	return d ? `${MONTHS[m - 1]} ${d} ${y}` : `${MONTHS[m - 1]} ${y}`;
 }
 
+/** Midnight local time on a 'YYYY-MM-DD' day, so date formatting shows that day in any timezone. */
+function localDay(day: string): Date {
+	const [y, m, d] = day.split('-').map(Number);
+	return new Date(y, m - 1, d);
+}
+
 /** Everything a post's update log shows, newest first. */
 export function buildLog(updates: Update[], history: PreGit[] | undefined, pubDate: Date): PostLog {
 	const entries: LogEntry[] = updates.map((u) => {
@@ -52,7 +58,7 @@ export function buildLog(updates: Update[], history: PreGit[] | undefined, pubDa
 			kind: 'update',
 			hash: u.hash,
 			short: u.hash.slice(0, 7),
-			date: formatDay(u.date),
+			date: formatPreGitDate(u.day),
 			version: u.version,
 			summary: u.summary,
 			diff,
@@ -66,5 +72,5 @@ export function buildLog(updates: Update[], history: PreGit[] | undefined, pubDa
 	} else {
 		entries.push({ kind: 'published', date: formatDay(pubDate) });
 	}
-	return { entries, updated: updates[0]?.date ?? null, show: updates.length > 0 || !!history?.length };
+	return { entries, updated: updates[0] ? localDay(updates[0].day) : null, show: updates.length > 0 || !!history?.length };
 }

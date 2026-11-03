@@ -32,8 +32,12 @@ const waitForAttr = (page, mode, key, value, timeout) =>
 		.waitForFunction(([sel, k, v]) => document.querySelector(sel)?.dataset[k] === v, [board(mode), key, value], { timeout })
 		.catch(() => {});
 
-async function open(browser, path, { viewport = DESKTOP, reducedMotion = 'no-preference', allowGLErrors = false, init } = {}) {
-	const context = await browser.newContext({ viewport, reducedMotion });
+async function open(
+	browser,
+	path,
+	{ viewport = DESKTOP, reducedMotion = 'no-preference', allowGLErrors = false, init, javaScriptEnabled = true } = {},
+) {
+	const context = await browser.newContext({ viewport, reducedMotion, javaScriptEnabled });
 	if (init) await context.addInitScript(init);
 	const page = await context.newPage();
 	const errors = [];
@@ -240,6 +244,55 @@ scenarios.push(async ({ browser }) => {
 		check(errors.length === 0, `${path} without float targets: no console errors ${JSON.stringify(errors)}`);
 		await context.close();
 	}
+});
+
+// ---- post update logs ----
+
+const MESH = '/projects/nicenano-supermini-meshnode/';
+/** The colour of a post block's update sign (its ::before bar). */
+const signColor = (page, line) =>
+	page.evaluate((l) => {
+		const el = document.querySelector(`.post-body > [data-line="${l}"]`);
+		return el ? getComputedStyle(el, '::before').backgroundColor : null;
+	}, line);
+const NO_SIGN = 'rgba(0, 0, 0, 0)';
+
+scenarios.push(async ({ browser }) => {
+	const { context, page, errors } = await open(browser, MESH);
+	const toggle = page.locator('.update-log > summary');
+	check((await toggle.count()) === 1, 'updates: the mesh post has a log toggle');
+	// no log at all: report it and skip the rest instead of timing out on the missing toggle
+	if (!(await toggle.count())) return context.close();
+	check(/git log · 4 updates/.test((await toggle.textContent()) ?? ''), 'updates: the toggle counts the relabel plus three pre-git versions');
+	check(/updated/i.test(await page.locator('.meta').innerText()), 'updates: the meta strip shows an UPDATED date');
+	const newest = await page.evaluate(() => document.querySelector('details[data-update]')?.getAttribute('data-update'));
+	const marked = await page.evaluate(() => {
+		const css = document.querySelector('style[data-update-marks]')?.textContent ?? '';
+		return [...css.matchAll(/data-line="(\d+)"/g)].map((m) => m[1]);
+	});
+	check(marked.length > 0, `updates: the newest update's signs are in the page (${marked.join(', ')})`);
+	check(marked.length > 0 && (await signColor(page, marked[0])) !== NO_SIGN, 'updates: a changed block shows a sign in the margin');
+	check((await signColor(page, '1')) === NO_SIGN, 'updates: an untouched block shows no sign');
+	await toggle.click();
+	await page.locator(`details[data-update="${newest}"] > summary`).click();
+	check(await page.locator(`details[data-update="${newest}"] .diff del`).first().isVisible(), 'updates: opening an update shows its word diff');
+	check((await page.locator('style[data-update-marks]').getAttribute('data-showing')) === newest, 'updates: opening an update points the signs at it');
+	await page.locator(`details[data-update="${newest}"] > summary`).click();
+	check((await page.locator('style[data-update-marks]').getAttribute('data-showing')) === newest, 'updates: closing it falls back to the newest update');
+	await page.screenshot({ path: `${OUT}/post-updates.png`, fullPage: false });
+	check(errors.length === 0, `updates: no console errors ${JSON.stringify(errors)}`);
+	await context.close();
+
+	const plain = await open(browser, '/projects/pihole-mdns/');
+	check((await plain.page.locator('.update-log').count()) === 0, 'updates: a post with no history shows no log');
+	check(!/updated/i.test(await plain.page.locator('.meta').innerText()), 'updates: and no UPDATED date');
+	await plain.context.close();
+
+	const noJs = await open(browser, MESH, { javaScriptEnabled: false });
+	await noJs.page.locator('.update-log > summary').click();
+	check(await noJs.page.locator('.entries').isVisible(), 'updates without JS: the log still opens');
+	check(marked.length > 0 && (await signColor(noJs.page, marked[0])) !== NO_SIGN, 'updates without JS: the newest signs still show');
+	await noJs.context.close();
 });
 
 // ---- runner ----

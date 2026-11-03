@@ -5,6 +5,7 @@ import { buildLog, formatDay, formatPreGitDate } from './log';
 const update = (over: Partial<Update>): Update => ({
 	hash: 'a1b2c3d4e5f6a7b8c9d0a1b2c3d4e5f6a7b8c9d0',
 	date: new Date('2026-10-31T18:00:00Z'),
+	day: '2026-10-31',
 	version: null,
 	summary: 'renumbered to v0.3, install still ahead',
 	oldBody: '##### V1.0\n- XL4016\n',
@@ -35,8 +36,17 @@ describe('buildLog', () => {
 			'pre-git:v0.2',
 			'pre-git:v0.1',
 		]);
-		expect(log.updated).toEqual(new Date('2026-10-31T18:00:00Z'));
+		expect(log.updated).toEqual(new Date(2026, 9, 31));
 		expect(log.show).toBe(true);
+	});
+
+	it("dates updates by the author's calendar day, whatever the build machine's timezone", () => {
+		// committed 4:23 pm Nov 2 in California, which is Nov 3 in UTC
+		const evening = update({ date: new Date('2026-11-03T00:23:11Z'), day: '2026-11-02' });
+		const log = buildLog([evening], undefined, pub);
+		expect(log.entries[0]).toMatchObject({ kind: 'update', date: 'Nov 2 2026' });
+		// a local-midnight Date, so the header's toLocaleDateString shows the same day anywhere
+		expect(log.updated).toEqual(new Date(2026, 10, 2));
 	});
 
 	it('uses an automatic "published" entry when there is no history', () => {
