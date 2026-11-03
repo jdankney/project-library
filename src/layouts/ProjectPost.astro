@@ -16,7 +16,6 @@ const {
 	title,
 	description,
 	pubDate,
-	updatedDate,
 	heroImage,
 	status,
 	tags,
@@ -188,12 +187,6 @@ const statusLabel = {
 				text-align: left;
 			}
 
-			.updated {
-				font-style: italic;
-				font-size: 0.85rem;
-				color: rgb(var(--text-muted));
-			}
-
 			@media (max-width: 720px) {
 				.title-block h1 { font-size: 1.8rem; }
 				.meta { gap: 1rem; }
@@ -262,10 +255,6 @@ const statusLabel = {
 				<div class="hero-img">
 					<Image width={1020} height={510} src={heroImage} alt={title} />
 				</div>
-			)}
-
-			{updatedDate && (
-				<p class="updated">Updated <FormattedDate date={updatedDate} /></p>
 			)}
 
 			<div class="prose">

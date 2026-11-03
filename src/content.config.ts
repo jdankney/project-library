@@ -11,7 +11,6 @@ const projects = defineCollection({
 			title: z.string(),
 			description: z.string(),
 			pubDate: z.coerce.date(),
-			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
 
 			// ---- project-specific fields (all optional so older posts still build) ----
@@ -25,6 +24,21 @@ const projects = defineCollection({
 			difficulty: z.number().min(1).max(5).optional(),
 			// One-line "what this cost me" summary, e.g. "~$12 in parts"
 			cost: z.string().optional(),
+			// Versions from before the post was in git, oldest first. Shown in the
+			// update log as `pre-git` entries (see README: Publishing a post update).
+			history: z
+				.array(
+					z.object({
+						version: z.string().min(1),
+						// YAML reads 2026-07-04 as a date and 2026-07 as a string; accept both
+						date: z.preprocess(
+							(v) => (v instanceof Date ? v.toISOString().slice(0, 10) : v),
+							z.string().regex(/^\d{4}-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?$/, 'use YYYY-MM or YYYY-MM-DD'),
+						),
+						note: z.string().min(1),
+					}),
+				)
+				.optional(),
 		}),
 });
 
