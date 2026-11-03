@@ -24,7 +24,8 @@ const CONTEXT_WORDS = 8;
 /** Below this share of common words, a rewritten block shows as removed + added instead of a word diff. */
 const SIMILARITY = 0.5;
 const IMAGE = /!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g;
-const HEADING = /^(#{1,6})\s+(.*)$/;
+/** Only section headings label hunks; deeper ones (####, #####) stay inside their section. */
+const HEADING = /^(#{2,3})\s+(.*)$/;
 
 const fileName = (src: string) => src.split('/').pop() ?? src;
 const words = (s: string) => s.split(/\s+/).filter(Boolean).length;
@@ -115,9 +116,21 @@ function elide(parts: DiffPart[]): DiffPart[] {
 	});
 }
 
-function headingLabel(block: string): string | null {
-	const m = HEADING.exec(block.split('\n')[0]);
+const labelOf = (line: string) => {
+	const m = HEADING.exec(line);
 	return m ? `${m[1]} ${displayText(m[2])}` : null;
+};
+
+/** The block's own label, when it starts with a section heading. */
+function headingLabel(block: string): string | null {
+	return labelOf(block.split('\n')[0]);
+}
+
+/** The last section heading anywhere in a block: posts often put one right under a paragraph line. */
+function lastHeading(block: string): string | null {
+	let found: string | null = null;
+	for (const line of block.split('\n')) found = labelOf(line) ?? found;
+	return found;
 }
 
 /** Diff whole whitespace-separated words, so `V1.0` → `V0.3` stays one swap instead of three fragments. */
@@ -154,6 +167,10 @@ export function diffProse(oldBody: string, newBody: string): ProseDiff {
 	};
 	const addBlock = (src: string) => {
 		heading = headingLabel(src) ?? heading;
+		emitAdded(src);
+		heading = lastHeading(src) ?? heading;
+	};
+	const emitAdded = (src: string) => {
 		const imgs = imageOnly(src);
 		if (imgs) return emit({ kind: 'image', op: 'added', to: imgs.join(', ') });
 		const text = displayText(src);
@@ -169,6 +186,10 @@ export function diffProse(oldBody: string, newBody: string): ProseDiff {
 	};
 	const changeBlock = (from: string, to: string) => {
 		heading = headingLabel(to) ?? heading;
+		emitChanged(from, to);
+		heading = lastHeading(to) ?? heading;
+	};
+	const emitChanged = (from: string, to: string) => {
 		const a = imageOnly(from);
 		const b = imageOnly(to);
 		if (a && b) return emit({ kind: 'image', op: 'replaced', from: a.join(', '), to: b.join(', ') });
@@ -184,7 +205,7 @@ export function diffProse(oldBody: string, newBody: string): ProseDiff {
 		const c = changes[i];
 		const n = c.value.length;
 		if (!c.added && !c.removed) {
-			for (let k = 0; k < n; k++) heading = headingLabel(newBlocks[ni + k]) ?? heading;
+			for (let k = 0; k < n; k++) heading = lastHeading(newBlocks[ni + k]) ?? heading;
 			oi += n;
 			ni += n;
 			continue;

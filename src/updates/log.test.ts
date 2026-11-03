@@ -64,7 +64,8 @@ describe('buildLog', () => {
 		const [entry] = buildLog([update({})], undefined, pub).entries;
 		expect(entry.kind).toBe('update');
 		if (entry.kind !== 'update') return;
-		expect(entry.diff.hunks[0].heading).toBe('##### V0.3');
+		// '#####' is too deep to label a hunk, and there's no ## above it
+		expect(entry.diff.hunks[0].heading).toBe('(intro)');
 		expect(entry.bar).toEqual({ plus: 1, minus: 1 });
 	});
 

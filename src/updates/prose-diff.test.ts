@@ -49,6 +49,17 @@ describe('diffProse', () => {
 		expect(hunks).toEqual([{ heading: '## Result', blocks: [{ kind: 'added', text: 'Winter update: fine.' }] }]);
 	});
 
+	it('labels with ## and ### only, so a deeper heading falls under its section', () => {
+		const { hunks } = diffProse('## Parts\nlist\n\n##### V1.0\n- XL4016\n', '## Parts\nlist\n\n##### V0.3\n- XL4016\n');
+		expect(hunks.map((h) => h.heading)).toEqual(['## Parts']);
+	});
+
+	it('follows a ## heading that sits mid-block, right under a paragraph line', () => {
+		const old = 'intro line\n## Result\nworks\n\nlater paragraph here\n';
+		const now = 'intro line\n## Result\nworks\n\nlater paragraph here, edited\n';
+		expect(diffProse(old, now).hunks[0].heading).toBe('## Result');
+	});
+
 	it('labels changes above the first heading as (intro)', () => {
 		expect(diffProse('hello\n', 'hello there\n').hunks[0].heading).toBe('(intro)');
 	});
@@ -59,8 +70,8 @@ describe('diffProse', () => {
 	});
 
 	it('reports a renamed heading as one whole-word swap labelled with its new name', () => {
-		const { hunks } = diffProse('##### V1.0\n- XL4016\n', '##### V0.3\n- XL4016\n');
-		expect(hunks[0].heading).toBe('##### V0.3');
+		const { hunks } = diffProse('## V1.0\n- XL4016\n', '## V0.3\n- XL4016\n');
+		expect(hunks[0].heading).toBe('## V0.3');
 		expect(hunks[0].blocks[0]).toEqual({
 			kind: 'changed',
 			parts: [
