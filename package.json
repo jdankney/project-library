@@ -19,11 +19,19 @@
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
     "astro": "^6.4.6",
-    "sharp": "^0.34.3"
+    "diff": "^8.0.4",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "sharp": "^0.34.3",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@types/hast": "^3.0.5",
+    "@types/mdast": "^4.0.4",
     "playwright": "^1.64.1",
+    "rehype-stringify": "^10.0.1",
+    "remark-rehype": "^11.1.2",
     "typescript": "^6.0.3",
     "vitest": "^5.0.5"
   }
